@@ -31,7 +31,14 @@ void C12TestBeam::Loop()
 //by  b_branchname->GetEntry(ientry); //read only this branch
    if (fChain == 0) return;
 
-   TH1F* si_2_2 = new TH1F("si_2_2","si_2_2",400,0,12000);
+
+   TH1F* h_si[3][4];
+   for(Int_t j =0;j<3;j++) {
+     for(Int_t k = 0;k<4;k++) {
+       TString name = Form("si_%d_%d",j+1,k+1);
+       h_si[j][k] = new TH1F(name,name,400,0,12000);
+     }
+   }
 
    Long64_t nentries = fChain->GetEntriesFast();
 
@@ -41,10 +48,12 @@ void C12TestBeam::Loop()
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
+      if(jentry%1000==0&&jentry!=0)
+	printf("Processing event %d of %d...\n",jentry,nentries);
       
       for(Int_t i =0;i<si_mul;i++) {
-	if(si_det[i]==2 && si_quad[i]==2)
-	  si_2_2->Fill(si_cal[i]);
+	h_si[si_det[i]-1][si_quad[i]-1]->Fill(si_cal[i]);
       }
    }
+   
 }
