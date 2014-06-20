@@ -100,31 +100,35 @@ double EnergyLoss::AddBack(double initialEnergy, double distance) {
 }
 
 double EnergyLoss::CalcRange(double initialEnergy, double remainder) {
-  double h = 0.0;
-  //double h = xStepSize_;
-  long long n = 1e9;
   double beam_e = initialEnergy;
+  double dist_init = 0.0;
   tk::spline f;
   f.set_points(energy_,dEdx_);
 
-  beam_e -= f(beam_e)*(h/3.0); //step 1
-  int num_steps = 1;
-  for(long long j=1; j<n; j++ ) 
-    {
-      if(j%2==1){
-	beam_e -= 4.0*f(beam_e)*(h/3.0);
-      }
-      else if(j%2==0){
-	beam_e -= 2.0*f(beam_e)*(h/3.0);
-      }
-      num_steps++;
-      if(beam_e - f(beam_e)*(h/3.0) <= remainder) 
-	break;
+  while(beam_e>=remainder){
+    if(f(beam_e)<=0.10){
+      beam_e = CompSimpSub(f,beam_e,0.0,0.2,160);
+      dist_init += 0.2;
     }
-  beam_e -= f(beam_e)*(h/3.0);
-  num_steps++;
+    else if(f(beam_e)<=0.2){
+      beam_e = CompSimpSub(f,beam_e,0.0,0.15,160);
+      dist_init += 0.15;
+    }
+    else if(f(beam_e)<=0.3){
+      beam_e = CompSimpSub(f,beam_e,0.0,0.1,160);
+      dist_init += 0.1;
+    }
+    else if(f(beam_e)<=1){
+      beam_e = CompSimpSub(f,beam_e,0.0,0.05,160);
+      dist_init += 0.05;
+    }
+    else{ // For the Havar
+      beam_e = CompSimpSub(f,beam_e,0.0,0.00004,160);
+      dist_init += 0.00004;
+    }
+  }
 
-  return num_steps;
+  return dist_init;
 }
 
 double EnergyLoss::CompSimpSub(tk::spline f,double initialEnergy,double a, double b, int num_steps){
