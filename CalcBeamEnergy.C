@@ -2,11 +2,10 @@ double CalcBeamEnergy(double measured) {
   gSystem->CompileMacro("EnergyLoss.C");
 
   EnergyLoss methane("dEdx_carbon_methane_290K_350torr.dat",
-		     3.1042e-2,  //conversion to MeV/mm
-		     2e-5);      //Step size in mm
-  EnergyLoss havar("dEdx_carbon_havar.dat",
-		   8.2997E+02,
-		   1e-7);
+     3.1042e-2);  //conversion to MeV/mm
+
+  EnergyLoss havar("dEdx_carbon_havar.dat", 
+     8.2997E+02);
   
   double afterMethane = methane.AddBack(measured,490);
   //printf("AfterMethane: %f\n",afterMethane);

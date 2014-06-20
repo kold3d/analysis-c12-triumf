@@ -3,20 +3,21 @@
 
 #include <vector>
 #include <TObject.h>
+#include "spline.h"
 
 class EnergyLoss : public TObject {
  public:
   EnergyLoss() : TObject() {};
-  EnergyLoss(const char*, double, double);
+  EnergyLoss(const char*, double);
 
   double CalcLoss(double,double);
   double AddBack(double,double);
   double CalcRemainder(double,double);
   double CalcRange(double,double);
+  double CompSimpSub(tk::spline,double,double,double,int);
+  double CompSimpAdd(tk::spline,double,double,double,int);
 
  private:
-  double xStepSize_;
-  
   std::vector<double> energy_;
   std::vector<double> dEdx_;
 

@@ -1,12 +1,11 @@
 #include "EnergyLoss.h"
 #include <fstream>
 #include <string>
-#include "spline.h"
 
 ClassImp(EnergyLoss)
 
-EnergyLoss::EnergyLoss(const char* energyFile, double conversion, double xStepSize) :
-TObject(), xStepSize_(xStepSize) {
+EnergyLoss::EnergyLoss(const char* energyFile, double conversion) :
+TObject(){
   ifstream in(energyFile);
 
   double file_energy;
@@ -36,24 +35,32 @@ TObject(), xStepSize_(xStepSize) {
 }
 
 double EnergyLoss::CalcRemainder(double initialEnergy, double distance) {
-  double h = xStepSize_;
-  long long n = int(distance/xStepSize_);
   double beam_e = initialEnergy;
+  double dist_init =0.0;
   tk::spline f;
   f.set_points(energy_,dEdx_);
-
-  beam_e -= f(beam_e)*(h/3.0);
-  for(long long j=1; j<n; j++ )
-    {
-      if(j%2==1){
-	beam_e -= 4.0*f(beam_e)*(h/3.0);
-      }
-      else if(j%2==0){
-	beam_e -= 2.0*f(beam_e)*(h/3.0);
-      }
-      if(beam_e - f(beam_e)*(h/3.0) <= 0.) break;
+  while(dist_init<=distance){
+    if(f(beam_e)<=0.10){
+      beam_e = CompSimpSub(f,beam_e,0.0,0.2,160);
+      dist_init += 0.2;
     }
-  beam_e -= f(beam_e)*(h/3.0);
+    else if(f(beam_e)<=0.2){
+      beam_e = CompSimpAdd(f,beam_e,0.0,0.15,160);
+      dist_init += 0.15;
+    }
+    else if(f(beam_e)<=0.3){
+      beam_e = CompSimpAdd(f,beam_e,0.0,0.1,160);
+      dist_init += 0.1;
+    }
+    else if(f(beam_e)<=1){
+      beam_e = CompSimpAdd(f,beam_e,0.0,0.05,160);
+      dist_init += 0.05;
+    }
+    else{ // For the Havar
+      beam_e = CompSimpAdd(f,beam_e,0.0,0.00004,160);
+      dist_init += 0.00004;
+    }
+  }
 
   return (beam_e < 0) ? 0. : beam_e;
 }
@@ -63,29 +70,38 @@ double EnergyLoss::CalcLoss(double initialEnergy, double distance) {
 }
 
 double EnergyLoss::AddBack(double initialEnergy, double distance) {
-  double h = xStepSize_;
-  long long n = int(distance/xStepSize_);
-  double beam_e = initialEnergy;
+  double dist_init =0.0;
   tk::spline f;
   f.set_points(energy_,dEdx_);
-
-  beam_e += f(beam_e)*(h/3.0);
-  for(long long j=1; j<n; j++ )
-    {
-      if(j%2==1){
-	beam_e += 4.0*f(beam_e)*(h/3.0);
-      }
-      else if(j%2==0){
-	beam_e += 2.0*f(beam_e)*(h/3.0);
-      }
+  while(dist_init<=distance){
+    if(f(initialEnergy)<=0.10){
+      initialEnergy = CompSimpAdd(f,initialEnergy,0.0,0.2,160);
+      dist_init += 0.2;
     }
-  beam_e += f(beam_e)*(h/3.0);
+    else if(f(initialEnergy)<=0.2){
+      initialEnergy = CompSimpAdd(f,initialEnergy,0.0,0.15,160);
+      dist_init += 0.15;
+    }
+    else if(f(initialEnergy)<=0.3){
+      initialEnergy = CompSimpAdd(f,initialEnergy,0.0,0.1,160);
+      dist_init += 0.1;
+    }
+    else if(f(initialEnergy)<=1){
+      initialEnergy = CompSimpAdd(f,initialEnergy,0.0,0.05,160);
+      dist_init += 0.05;
+    }
+    else{ // For the Havar
+      initialEnergy = CompSimpAdd(f,initialEnergy,0.0,0.00004,160);
+      dist_init += 0.00004;
+    }
+  }
 
-  return beam_e;
+  return initialEnergy;
 }
 
 double EnergyLoss::CalcRange(double initialEnergy, double remainder) {
-  double h = xStepSize_;
+  double h = 0.0;
+  //double h = xStepSize_;
   long long n = 1e9;
   double beam_e = initialEnergy;
   tk::spline f;
@@ -108,5 +124,45 @@ double EnergyLoss::CalcRange(double initialEnergy, double remainder) {
   beam_e -= f(beam_e)*(h/3.0);
   num_steps++;
 
-  return xStepSize_*num_steps;
+  return num_steps;
+}
+
+double EnergyLoss::CompSimpSub(tk::spline f,double initialEnergy,double a, double b, int num_steps){
+  double h = (b-a)/((double) num_steps);
+  double beam_e = initialEnergy;
+  //tk::spline f;
+  //f.set_points(energy_,dEdx_);
+
+  beam_e -= f(beam_e)*(h/3.0);
+  for(int j=1; j<num_steps; j++ )
+  {
+    if(j%2==1){
+      beam_e -= 4.0*f(beam_e)*(h/3.0);
+    }
+    else if(j%2==0){
+      beam_e -= 2.0*f(beam_e)*(h/3.0);
+    }
+  }
+  beam_e -= f(beam_e)*(h/3.0);
+  return beam_e;
+}
+
+double EnergyLoss::CompSimpAdd(tk::spline f,double initialEnergy,double a, double b, int num_steps){
+  double h = (b-a)/((double) num_steps);
+  double beam_e = initialEnergy;
+  //tk::spline f;
+  //f.set_points(energy_,dEdx_);
+
+  beam_e += f(beam_e)*(h/3.0);
+  for(int j=1; j<num_steps; j++ )
+  {
+    if(j%2==1){
+      beam_e += 4.0*f(beam_e)*(h/3.0);
+    }
+    else if(j%2==0){
+      beam_e += 2.0*f(beam_e)*(h/3.0);
+    }
+  }
+  beam_e += f(beam_e)*(h/3.0);
+  return beam_e;
 }
