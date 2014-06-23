@@ -7,7 +7,7 @@ double CalcBeamEnergy(double measured) {
   EnergyLoss havar("dEdx_carbon_havar.dat", 
      8.2997E+02);
   
-  double afterMethane = methane.AddBack(measured,490);
+  double afterMethane = methane.AddBack(measured,513);
   //printf("AfterMethane: %f\n",afterMethane);
   double afterHavar = havar.AddBack(afterMethane,4e-3);
 
