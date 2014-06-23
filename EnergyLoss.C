@@ -40,7 +40,11 @@ double EnergyLoss::CalcRemainder(double initialEnergy, double distance) {
   tk::spline f;
   f.set_points(energy_,dEdx_);
   while(dist_init<=distance){
-    if(f(beam_e)<=0.10){
+    if(f(beam_e)<=0.05){ // For Protons
+      beam_e = CompSimpSub(f,beam_e,0.0,0.2,10);
+      dist_init += 0.2;
+    }
+    else if(f(beam_e)<=0.10){ // For Carbon
       beam_e = CompSimpSub(f,beam_e,0.0,0.2,160);
       dist_init += 0.2;
     }
@@ -74,7 +78,11 @@ double EnergyLoss::AddBack(double initialEnergy, double distance) {
   tk::spline f;
   f.set_points(energy_,dEdx_);
   while(dist_init<=distance){
-    if(f(initialEnergy)<=0.10){
+    if(f(initialEnergy)<=0.05){ // For protons
+      initialEnergy = CompSimpAdd(f,initialEnergy,0.0,0.2,10);
+      dist_init += 0.2;
+    }
+    else if(f(initialEnergy)<=0.10){ // For Carbon
       initialEnergy = CompSimpAdd(f,initialEnergy,0.0,0.2,160);
       dist_init += 0.2;
     }
@@ -106,7 +114,11 @@ double EnergyLoss::CalcRange(double initialEnergy, double remainder) {
   f.set_points(energy_,dEdx_);
 
   while(beam_e>=remainder){
-    if(f(beam_e)<=0.10){
+    if(f(beam_e)<=0.05){ // For protons
+      beam_e = CompSimpSub(f,beam_e,0.0,0.2,10);
+      dist_init += 0.2;
+    }
+    else if(f(beam_e)<=0.10){ // For Carbon
       beam_e = CompSimpSub(f,beam_e,0.0,0.2,160);
       dist_init += 0.2;
     }

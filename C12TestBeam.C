@@ -61,32 +61,35 @@ void C12TestBeam::Loop()
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
-      if(jentry%1000==0&&jentry!=0)
-	printf("Processing event %d of %d...\n",jentry,nentries);
+      if(jentry%1000==0&&jentry!=0){
+	      printf("Processing event %lld of %lld...\n",jentry,nentries);
+      }
       
       Int_t highEDet = -1;
       Int_t highEQuad = -1;
       Float_t highE = 0;
 
       for(Int_t i =0;i<si_mul;i++) {
-	h_si[si_det[i]-1][si_quad[i]-1]->Fill(si_cal[i]);
-	if(si_cal[i]>highE) {
-	  highE = si_cal[i];
-	  highEDet = si_det[i];
-	  highEQuad = si_quad[i];
-	}
+	      h_si[si_det[i]-1][si_quad[i]-1]->Fill(si_cal[i]);
+	      if(si_cal[i]>highE) {
+	        highE = si_cal[i];
+	        highEDet = si_det[i];
+	        highEQuad = si_quad[i];
+	      }
       }
 
-      for(Int_t i=0;i<pc_mul;i++) {
-	Float_t left = pc_ch_left[i];
-	Float_t right = pc_ch_right[i];
-	h_pc[pc_wire[i]-1][0]->Fill(left);
-	h_pc[pc_wire[i]-1][1]->Fill(right);	
-	if(left<positionThreshold || right<positionThreshold) continue;
-	Float_t pos = (right-left)/(left+right);
-	if(highEDet == 3 && (highEQuad == 1 || highEQuad == 3) &&
-	   highE>800 && highE<1200)
-	  h_pos[pc_wire[i]-1]->Fill(pos);	
+      for(Int_t i=0;i<pc_mul;i++)
+      {
+	      Float_t left = pc_ch_left[i];
+        Float_t right = pc_ch_right[i];
+        h_pc[pc_wire[i]-1][0]->Fill(left);
+        h_pc[pc_wire[i]-1][1]->Fill(right);	
+        if(left<positionThreshold || right<positionThreshold) continue;
+        Float_t pos = (right-left)/(left+right);
+        if(highEDet == 3 && (highEQuad == 1 || highEQuad == 3) &&
+           highE>800 && highE<1200){
+          h_pos[pc_wire[i]-1]->Fill(pos);
+        }
       }
    }
    
