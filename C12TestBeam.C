@@ -31,7 +31,7 @@ void C12TestBeam::Loop()
 //by  b_branchname->GetEntry(ientry); //read only this branch
    if (fChain == 0) return;
 
-   Int_t positionThreshold=120;
+   Int_t positionThreshold=20;
 
    TH1F* h_si[3][4];
    TH1F* h_pc[8][2];
@@ -45,6 +45,15 @@ void C12TestBeam::Loop()
    wire_offset[5] = std::pair<float,float>(39.6441,39.1638);
    wire_offset[6] = std::pair<float,float>(39.9842,40.8464);
    wire_offset[7] = std::pair<float,float>(39.6582,38.1933);
+
+   wire_gain_diff[0] = 1.00636;
+   wire_gain_diff[1] = 0.95856;
+   wire_gain_diff[2] = 0.95023;
+   wire_gain_diff[3] = 0.99627;
+   wire_gain_diff[4] = 0.97248;
+   wire_gain_diff[5] = 1.04135;
+   wire_gain_diff[6] = 1.04280;
+   wire_gain_diff[7] = 1.01840;
 
    for(Int_t j =0;j<3;j++) {
      for(Int_t k = 0;k<4;k++) {
@@ -89,8 +98,9 @@ void C12TestBeam::Loop()
 
       for(Int_t i=0;i<pc_mul;i++)
       {
-	      Float_t left = pc_ch_left[i];
-        Float_t right = pc_ch_right[i];
+	Float_t left = pc_ch_left[i]-wire_offset[pc_wire[i]-1].first;
+        Float_t right = pc_ch_right[i]-wire_offset[pc_wire[i]-1].second;
+	right*=wire_gain_diff[pc_wire[i]-1];
         h_pc[pc_wire[i]-1][0]->Fill(left);
         h_pc[pc_wire[i]-1][1]->Fill(right);	
         if(left<positionThreshold || right<positionThreshold) continue;

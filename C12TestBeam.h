@@ -35,6 +35,7 @@ public :
 
    // Declaration of PC Offset and Gain
    std::map<int,std::pair<float,float> > wire_offset;
+   std::map<int,float> wire_gain_diff;
 
    // List of branches
    TBranch        *b_si_mul;   //!
