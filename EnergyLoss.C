@@ -49,19 +49,19 @@ double EnergyLoss::CalcRemainder(double initialEnergy, double distance) {
       dist_init += 0.2;
     }
     else if(f(beam_e)<=0.2){
-      beam_e = CompSimpAdd(f,beam_e,0.0,0.15,160);
+      beam_e = CompSimpSub(f,beam_e,0.0,0.15,160);
       dist_init += 0.15;
     }
     else if(f(beam_e)<=0.3){
-      beam_e = CompSimpAdd(f,beam_e,0.0,0.1,160);
+      beam_e = CompSimpSub(f,beam_e,0.0,0.1,160);
       dist_init += 0.1;
     }
     else if(f(beam_e)<=1){
-      beam_e = CompSimpAdd(f,beam_e,0.0,0.05,160);
+      beam_e = CompSimpSub(f,beam_e,0.0,0.05,160);
       dist_init += 0.05;
     }
     else{ // For the Havar
-      beam_e = CompSimpAdd(f,beam_e,0.0,0.00004,160);
+      beam_e = CompSimpSub(f,beam_e,0.0,0.00004,160);
       dist_init += 0.00004;
     }
   }

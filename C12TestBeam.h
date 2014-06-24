@@ -33,6 +33,9 @@ public :
    Int_t           pc_ch_left[8];   //[pc_mul]
    Int_t           ic_ch;
 
+   // Declaration of PC Offset and Gain
+   std::map<int,std::pair<float,float> > wire_offset;
+
    // List of branches
    TBranch        *b_si_mul;   //!
    TBranch        *b_si_det;   //!

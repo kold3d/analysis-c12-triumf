@@ -37,6 +37,15 @@ void C12TestBeam::Loop()
    TH1F* h_pc[8][2];
    TH1F* h_pos[8];
 
+   wire_offset[0] = std::pair<float,float>(0.0,0.0);
+   wire_offset[1] = std::pair<float,float>(39.6507,38.5129);
+   wire_offset[2] = std::pair<float,float>(39.0006,39.8341);
+   wire_offset[3] = std::pair<float,float>(39.2025,38.8358);
+   wire_offset[4] = std::pair<float,float>(39.7448,41.139);
+   wire_offset[5] = std::pair<float,float>(39.6441,39.1638);
+   wire_offset[6] = std::pair<float,float>(39.9842,40.8464);
+   wire_offset[7] = std::pair<float,float>(39.6582,38.1933);
+
    for(Int_t j =0;j<3;j++) {
      for(Int_t k = 0;k<4;k++) {
        TString name = Form("si_%d_%d",j+1,k+1);
@@ -86,8 +95,8 @@ void C12TestBeam::Loop()
         h_pc[pc_wire[i]-1][1]->Fill(right);	
         if(left<positionThreshold || right<positionThreshold) continue;
         Float_t pos = (right-left)/(left+right);
-        if(highEDet == 3 && (highEQuad == 1 || highEQuad == 3) &&
-           highE>800 && highE<1200){
+        if(highEDet == 2 && (highEQuad == 2 || highEQuad == 4) &&
+           highE>3587 && highE<3987){
           h_pos[pc_wire[i]-1]->Fill(pos);
         }
       }
