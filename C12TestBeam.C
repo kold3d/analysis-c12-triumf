@@ -105,8 +105,8 @@ void C12TestBeam::Loop()
         h_pc[pc_wire[i]-1][1]->Fill(right);	
         if(left<positionThreshold || right<positionThreshold) continue;
         Float_t pos = (right-left)/(left+right);
-        if(highEDet == 2 && (highEQuad == 2 || highEQuad == 4) &&
-           highE>3587 && highE<3987){
+        if(highEDet == 3 && (highEQuad == 1 || highEQuad == 3) &&
+           highE>3206 && highE<3606){
           h_pos[pc_wire[i]-1]->Fill(pos);
         }
       }
