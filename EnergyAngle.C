@@ -5,14 +5,12 @@
 #include <TCanvas.h>
 #include "EnergyLoss.h"
 #include "TMath.h"
+#include <fstream>
+#include <sstream>
+
+LookupTable EnergyAngle::table;
 
 void EnergyAngle::InitParameters() {
-  sum_pc_threshold = 110;  //In Channels
-  si_threshold     = 300.; //In KeV
-  beam_energy      = 79.76 ; //In MeV, after window
-  pressure         = 397.; //In Torr
-  temperature      = 290.; //In Kelvin
-
   //Noise peaks
   wire_offset[0] = std::pair<float,float>(0.0,0.0);
   wire_offset[1] = std::pair<float,float>(39.6507,38.5129);
@@ -120,6 +118,84 @@ Float_t EnergyAngle::CalcPosition(UChar_t wire, Int_t left_ch, Int_t right_ch) {
   return pos;
 }
 
+std::pair<Float_t,Float_t> EnergyAngle::LookupCMEnergyAngle(UChar_t wire, Float_t x, Float_t protonEnergy) {
+  Float_t newX = floor(10.*fabs(x)/5.)*5./10.;
+  if(x-newX>=0.25) newX += 0.5;
+
+  if(wire > 7 || wire < 0 || newX < 0. || newX > 80. ) {
+    printf("Out of Range.\n");
+    return std::pair<Float_t,Float_t>(0.,0.);
+  }
+
+  Int_t mappedWire = wire;
+  if(wire == 3) mappedWire = 1;
+  else if(wire == 4) mappedWire = 0;
+  else if(wire == 7) mappedWire = 5;
+
+  std::vector<LookupEntry> vec = table[mappedWire][newX];
+  Int_t size = vec.size();
+
+  Int_t start = floor(size/2);
+  Int_t direction = 0;
+  if(vec[start].protonEnergy > protonEnergy) direction = 1;
+  else if(vec[start].protonEnergy < protonEnergy) direction  = -1;
+  else return std::pair<Float_t,Float_t>(vec[start].cmEnergy,vec[start].angle);
+
+  Bool_t done = false;
+  Float_t previousAngle = vec[start].angle;
+  Float_t previousCMEnergy = vec[start].cmEnergy;
+  Float_t previousProtonEnergy = vec[start].protonEnergy;
+
+  Float_t foundAngle =0;
+  Float_t foundCMEnergy = 0.;
+
+  Int_t i = start+direction;
+  while(!done && i>0 && i<size) {
+    Float_t thisAngle = vec[i].angle;
+    Float_t thisCMEnergy = vec[i].cmEnergy;
+    Float_t thisProtonEnergy = vec[i].protonEnergy;
+
+    if((direction < 0 && thisProtonEnergy >=protonEnergy) ||
+	      (direction >0 && thisProtonEnergy <= protonEnergy)) {
+      Float_t energy_slope = (thisCMEnergy-previousCMEnergy)/(thisProtonEnergy-previousProtonEnergy);
+      Float_t energy_intercept = thisCMEnergy-thisProtonEnergy*energy_slope;
+      Float_t angle_slope = (thisAngle-previousAngle)/(thisProtonEnergy-previousProtonEnergy);
+      Float_t angle_intercept = thisAngle-thisProtonEnergy*angle_slope;
+      foundAngle = angle_slope*protonEnergy+angle_intercept;
+      foundCMEnergy = energy_slope*protonEnergy+energy_intercept;
+      done = true;
+    } else {
+      previousAngle = thisAngle;
+      previousCMEnergy = thisCMEnergy;  
+      previousProtonEnergy = thisProtonEnergy;
+      i += direction;
+    }
+  }
+
+  if(!done) {
+    printf("Entry not found in table!\n");
+  }
+  
+  return std::pair<Float_t,Float_t>(foundCMEnergy,foundAngle);
+}
+
+void EnergyAngle::ReadLookupTable() {
+  std::ifstream in("lookup_table.out");
+  std::string line;
+  while(!in.eof()) {
+    getline(in,line);
+    if(!in.eof()) {
+      std::istringstream stm;
+      stm.str(line);
+      Int_t wire;
+      Float_t position,range,r,angle,cmEnergy,protonEnergy;
+      stm >> wire >> position >> range >> r >> angle >> cmEnergy >> protonEnergy;
+      LookupEntry entry = {range,r,angle,cmEnergy,protonEnergy};
+      table[wire][position].push_back(entry);
+    }
+  }
+}
+
 void EnergyAngle::CalcLookupTable() {
   Float_t gasConstant = 8.3144621;
   Float_t torrInPa = 133.322368;
@@ -152,15 +228,15 @@ void EnergyAngle::CalcLookupTable() {
   };
   
   FILE* out = fopen("lookup_table.out","w");
-  for(UChar_t wire = 0;wire<8;wire++) {
+  for(UChar_t wire = 2;wire<8;wire++) {
     if(wire==7) {
-      table[wire]=table[5];
+      //table[wire]=table[5];
       continue;
     } else if(wire == 4) {
-      table[wire]=table[0];
+      //table[wire]=table[0];
       continue;
     } else if(wire == 3) {
-      table[wire] = table[1];
+      //table[wire] = table[1];
       continue;
     }
     

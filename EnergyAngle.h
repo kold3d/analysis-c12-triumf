@@ -16,6 +16,15 @@
 
 // Fixed size dimensions of array or collections stored in the TTree if any.
 
+typedef struct LookupEntry {
+  Float_t range;
+  Float_t r;
+  Float_t angle;
+  Float_t cmEnergy;
+  Float_t protonEnergy;
+} LookupEntry;
+typedef std::map<int,std::map<float,std::vector<LookupEntry> > > LookupTable;
+
 class EnergyAngle {
 public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
@@ -55,30 +64,25 @@ public :
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 
-   void CalcLookupTable();
+   static void CalcLookupTable();
+   static void ReadLookupTable();
+   static std::pair<Float_t,Float_t> LookupCMEnergyAngle(UChar_t,Float_t,Float_t);
 
  private:
    void InitParameters();
    Float_t CalcPosition(UChar_t, Int_t, Int_t);
 
-   Int_t sum_pc_threshold;
-   Float_t si_threshold;
-   Float_t beam_energy;
-   Float_t pressure;
-   Float_t temperature;
-
-   typedef struct LookupEntry {
-     Float_t range;
-     Float_t r;
-     Float_t angle;
-     Float_t cmEnergy;
-     Float_t protonEnergy;
-   } LookupEntry;
+   static const Int_t sum_pc_threshold   = 110;    //In Channels
+   static const Float_t si_threshold     = 300.;   //In KeV
+   static const Float_t beam_energy      = 79.76 ; //In MeV, after window
+   static const Float_t pressure         = 397.;   //In Torr
+   static const Float_t temperature      = 290.;   //In Kelvin
 
    std::map<int,std::pair<float,float> > wire_offset;
    std::map<int,float> wire_gain_diff;
    std::map<int,std::pair<float,float> > wire_pos_cal;
-   std::map<int,std::map<float,std::vector<LookupEntry> > > table;
+   
+   static LookupTable table;
 };
 
 #endif
