@@ -70,10 +70,11 @@ public :
 
  private:
    void InitParameters();
-   Float_t CalcPosition(UChar_t, Int_t, Int_t);
+   Float_t CalcPosition(UChar_t, Float_t, Float_t);
+   void MatchPC(UChar_t, Float_t&, Float_t&);
 
-   static const Int_t sum_pc_threshold   = 110;    //In Channels
-   static const Float_t si_threshold     = 300.;   //In KeV
+   static const Float_t sum_pc_threshold   = 50.;   //In Channels
+   static const Float_t si_threshold     = 200.;   //In KeV
    static const Float_t beam_energy      = 79.76 ; //In MeV, after window
    static const Float_t pressure         = 397.;   //In Torr
    static const Float_t temperature      = 290.;   //In Kelvin
