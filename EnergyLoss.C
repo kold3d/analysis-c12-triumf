@@ -35,6 +35,10 @@ TObject(){
 }
 
 double EnergyLoss::CalcRemainder(double initialEnergy, double distance) {
+
+  if(distance == 0.) return initialEnergy;
+  if(initialEnergy<1e-6) return 0.;
+
   double beam_e = initialEnergy;
   double dist_init =0.0;
   tk::spline f;
@@ -108,6 +112,9 @@ double EnergyLoss::AddBack(double initialEnergy, double distance) {
 }
 
 double EnergyLoss::CalcRange(double initialEnergy, double remainder) {
+
+  if(initialEnergy == remainder) return 0;
+
   double beam_e = initialEnergy;
   double dist_init = 0.0;
   tk::spline f;
