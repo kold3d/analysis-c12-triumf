@@ -11,6 +11,13 @@
 LookupTable EnergyAngle::table;
 
 void EnergyAngle::InitParameters() {
+
+  sum_pc_threshold  = 50.;   //In Channels
+  si_threshold     = 200.;   //In KeV
+  beam_energy      = 79.76; //In MeV, after window
+  pressure         = 397.;   //In Torr
+  temperature      = 290.;   //In Kelvin
+  
   //Noise peaks
   wire_offset[0] = std::pair<float,float>(0.0,0.0);
   wire_offset[1] = std::pair<float,float>(39.6507,38.5129);
@@ -355,3 +362,9 @@ void EnergyAngle::CalcLookupTable() {
   fclose(out);
   
 }
+
+Float_t EnergyAngle::sum_pc_threshold;
+Float_t EnergyAngle::si_threshold;
+Float_t EnergyAngle::beam_energy;   
+Float_t EnergyAngle::pressure;  
+Float_t EnergyAngle::temperature;      

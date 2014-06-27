@@ -73,11 +73,11 @@ public :
    Float_t CalcPosition(UChar_t, Float_t, Float_t);
    void MatchPC(UChar_t, Float_t&, Float_t&);
 
-   static const Float_t sum_pc_threshold   = 50.;   //In Channels
-   static const Float_t si_threshold     = 200.;   //In KeV
-   static const Float_t beam_energy      = 79.76 ; //In MeV, after window
-   static const Float_t pressure         = 397.;   //In Torr
-   static const Float_t temperature      = 290.;   //In Kelvin
+   static Float_t sum_pc_threshold;
+   static Float_t si_threshold;
+   static Float_t beam_energy;   
+   static Float_t pressure;  
+   static Float_t temperature;      
 
    std::map<int,std::pair<float,float> > wire_offset;
    std::map<int,float> wire_gain_diff;
