@@ -48,7 +48,7 @@ public :
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
-   virtual void     Loop();
+   virtual void     Loop(Int_t);
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 
@@ -58,6 +58,7 @@ public :
 
    static void InitParameters();
    void DivideTargetThickness(TH1F*);
+   void EstimateSolidAngleNorm(TH1F*,Int_t);
 };
 
 #endif

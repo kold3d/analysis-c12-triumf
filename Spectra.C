@@ -12,7 +12,7 @@ void Spectra::InitParameters() {
   temperature      = 290.;   //In Kelvin
 }
 
-void Spectra::Loop()
+void Spectra::Loop(Int_t incoming)
 {
 //   In a ROOT session, you can do:
 //      Root > .L Spectra.C
@@ -48,16 +48,34 @@ void Spectra::Loop()
 
   TH1F* s1 = new TH1F("s1","Forward Angles",numBins,0,3.);
   s1->Sumw2();
+  s1->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
+  s1->GetYaxis()->SetTitle("Yield [arb. units]");
+  s1->GetYaxis()->SetTitleOffset(1.6);
   TH1F* s2 = new TH1F("s2","First Ring",numBins,0,3.);
   s2->Sumw2();
+  s2->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
+  s2->GetYaxis()->SetTitle("Yield [arb. units]");
+  s2->GetYaxis()->SetTitleOffset(1.6);
   TH1F* s3 = new TH1F("s3","Second Ring",numBins,0,3.);
   s3->Sumw2();
+  s3->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
+  s3->GetYaxis()->SetTitle("Yield [arb. units]");
+  s3->GetYaxis()->SetTitleOffset(1.6);
   TH1F* s4 = new TH1F("s4","Third Ring",numBins,0,3.);
   s4->Sumw2();
+  s4->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
+  s4->GetYaxis()->SetTitle("Yield [arb. units]");
+  s4->GetYaxis()->SetTitleOffset(1.6);
   TH1F* s5 = new TH1F("s5","Fourth Ring",numBins,0,3.);
   s5->Sumw2();
+  s5->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
+  s5->GetYaxis()->SetTitle("Yield [arb. units]");
+  s5->GetYaxis()->SetTitleOffset(1.6);
   TH1F* s6 = new TH1F("s6","Fifth Ring",numBins,0,3.);
   s6->Sumw2();
+  s6->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
+  s6->GetYaxis()->SetTitle("Yield [arb. units]");
+  s6->GetYaxis()->SetTitleOffset(1.6);
 
   
    Long64_t nentries = fChain->GetEntriesFast();
@@ -101,22 +119,35 @@ void Spectra::Loop()
    c1->Divide(3,2);
    c1->cd(1);
    DivideTargetThickness(s1);
+   EstimateSolidAngleNorm(s1,1);
    s1->Draw();
    c1->cd(2);
    DivideTargetThickness(s2);
+   EstimateSolidAngleNorm(s2,2);
    s2->Draw();
    c1->cd(3);
    DivideTargetThickness(s3);
+   EstimateSolidAngleNorm(s3,3);
    s3->Draw();
    c1->cd(4);
    DivideTargetThickness(s4);
+   EstimateSolidAngleNorm(s4,4);
    s4->Draw();
    c1->cd(5);
    DivideTargetThickness(s5);
+   EstimateSolidAngleNorm(s5,5);
    s5->Draw();
    c1->cd(6);
    DivideTargetThickness(s6);
+   EstimateSolidAngleNorm(s6,6);
    s6->Draw();
+   
+   s1->Scale(1./incoming);
+   s2->Scale(1./incoming);
+   s3->Scale(1./incoming);
+   s4->Scale(1./incoming);
+   s5->Scale(1./incoming);
+   s6->Scale(1./incoming);
 }
 
 void Spectra::DivideTargetThickness(TH1F *f){
@@ -127,7 +158,7 @@ void Spectra::DivideTargetThickness(TH1F *f){
     gasConstant/temperature*0.001;
   
   EnergyLoss methane("dEdx_carbon_methane_290K_400torr.dat",
-		     density);
+		     density*100);
     
   Int_t i_size = f->GetSize();
   TAxis *xaxis = f->GetXaxis();
@@ -143,6 +174,39 @@ void Spectra::DivideTargetThickness(TH1F *f){
     Double_t factor = 4.e-27*density*delta_x*TMath::Na()/molarMassMethane;
     binContent /= factor;
     binError /= factor;
+    f->SetBinContent(i,binContent);
+    f->SetBinError(i,binError);
+  }
+}
+
+void Spectra::EstimateSolidAngleNorm(TH1F* f, Int_t region) {
+  Float_t gasConstant = 8.3144621;
+  Float_t torrInPa = 133.322368;
+  Float_t molarMassMethane = 0.01604;
+  Float_t density = pressure*torrInPa*molarMassMethane/
+    gasConstant/temperature*0.001;
+
+  EnergyLoss methane("dEdx_carbon_methane_290K_400torr.dat",
+		     density*100);
+    
+  Int_t i_size = f->GetSize();
+  TAxis *xaxis = f->GetXaxis();
+  for(Int_t i=1;i<i_size-1;i++){
+    Double_t binCenter = xaxis->GetBinCenter(i);
+    binCenter *= 13.0;
+    Double_t binContent = f->GetBinContent(i);
+    Double_t binError = f->GetBinError(i);
+    Double_t delta_x = methane.CalcRange(79.76,binCenter);
+    Double_t x;
+    if(region == 1) x = 0;
+    else if(region == 2) x = 20.;
+    else if(region == 3) x = 42.21;
+    else if(region == 4) x = 54.71;
+    else if(region == 5) x = 67.21;
+    else if(region == 6) x = 79.71;
+    Double_t r2 = x*x+(484.5-delta_x)*(484.5-delta_x);
+    binContent *= r2;
+    binError *= r2;
     f->SetBinContent(i,binContent);
     f->SetBinError(i,binError);
   }

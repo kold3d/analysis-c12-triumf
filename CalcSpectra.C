@@ -1,4 +1,4 @@
-void CalcSpectra(TTree* tree) {
+void CalcSpectra(TTree* tree,Int_t incoming) {
   gSystem->CompileMacro("EnergyLoss.C");
   gSystem->CompileMacro("EnergyAngle.C");
   EnergyAngle::ReadLookupTable();
@@ -9,5 +9,5 @@ void CalcSpectra(TTree* tree) {
   TFile * file = TFile::Open("energy_angle.root");
   TTree* energyAngle = (TTree*) file->Get("energyAngle");
   Spectra t2(energyAngle);
-  t2.Loop();
+  t2.Loop(incoming);
 }
