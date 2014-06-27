@@ -72,9 +72,10 @@ std::pair<Int_t,Float_t> CalcPCCell(Float_t x1, Float_t y1, Float_t depth) {
 
   std::pair<Int_t,Float_t> returnValues;
   if(entranceCell != exitCell) {
+    Char_t direction = (exitCell-entranceCell);
     
   } else {
-    returnValues.first = entranceCell;
+    returnValues.first = entranceCell+1;
     
   }
   
