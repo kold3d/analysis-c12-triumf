@@ -89,6 +89,7 @@ void EnergyAngle::Loop()
   outTree->Branch("wire",wire,"wire[2]/I");
 
   Int_t goodSi = 0, noPosition=0, noCMEnergy=0;
+  Int_t numBelowPCThreshold= 0.;
 
    Long64_t nentries = fChain->GetEntriesFast();
    Long64_t nbytes = 0, nb = 0;
@@ -121,33 +122,43 @@ void EnergyAngle::Loop()
       //Find position in front and back wire
       Float_t positionFront = 0.;
       Float_t positionRear  = 0.;
+      Bool_t goodRearPosition = false;
+      Bool_t goodFrontPosition = false;
       Float_t highEPCFront  = 0.;
       Float_t highEPCRear   = 0.;
       UChar_t wireFront     = 0;
       UChar_t wireRear      = 0;
+      Bool_t wireAboveThreshold = false;
       for(Int_t i = 0;i<pc_mul;i++) {
 	if(pc_wire[i]==1) continue;
 	Float_t left = pc_ch_left[i];
 	Float_t right = pc_ch_right[i];
 	MatchPC(pc_wire[i]-1,left,right);
 	Float_t sum = left+right;
-	if( sum < sum_pc_threshold ) continue;
+	if( sum < sum_pc_threshold ) {
+	  continue;
+	}
+	wireAboveThreshold = true;
 	if(pc_wire[i] < 6) {
 	  if(sum > highEPCRear) {
 	    highEPCRear = sum;
 	    positionRear = CalcPosition(pc_wire[i]-1,left,right);
 	    wireRear = pc_wire[i];
+	    goodRearPosition = true;
 	  }
 	} else {
 	  if(sum > highEPCFront) {
 	    highEPCFront = sum;
 	    positionFront = CalcPosition(pc_wire[i]-1,left,right);
 	    wireFront = pc_wire[i];
+	    goodFrontPosition = true;
 	  }
 	}
       }
       
-      if(positionRear == 0.) {
+      if(!wireAboveThreshold) numBelowPCThreshold++;
+
+      if(!goodRearPosition) {
 	noPosition++;
 	continue;
       }
@@ -201,7 +212,7 @@ void EnergyAngle::Loop()
    outTree->Write();
    file->Close();
 
-   printf("Total Events: %d No Position: %d No CM Energy %d\n",goodSi,noPosition,noCMEnergy);   
+   printf("Total Events: %d Below PC Threshold: %d No Position: %d No CM Energy %d\n",goodSi,numBelowPCThreshold,noPosition,noCMEnergy);   
 }
 
 void EnergyAngle::MatchPC(UChar_t wire, Float_t& left_ch,Float_t& right_ch) {
