@@ -17,6 +17,46 @@
 
 // Fixed size dimensions of array or collections stored in the TTree if any.
 
+typedef struct Vect3d {
+  Float_t x;
+  Float_t y;
+  Float_t z;
+} Point3d;
+
+class Vec3d {
+public:
+ Vec3d(Point3d start, Point3d stop) {
+    origin.x = start.x;
+    origin.y = start.y;
+    origin.z = start.z;
+    mag = sqrt((start.x-stop.x)*(start.x-stop.x)+
+	       (start.y-stop.y)*(start.y-stop.y)+
+	       (start.z-stop.z)*(start.z-stop.z));
+    x=(start.x-stop.x)/mag;
+    y=(start.y-stop.y)/mag;
+    z=(start.z-stop.z)/mag;
+  };
+  Point3d PointIntersectXPlane(Float_t xp) {
+   Point3d point = {xp+origin.x,xp/x*y+origin.y,xp/x*z+origin.z};
+   return point;
+  };
+  Point3d PointIntersectYPlane(Float_t yp) {
+    Point3d point = {yp/y*x+origin.x,yp+origin.y,yp/y*z+origin.z};
+    return point;
+  };
+  Point3d PointIntersectZPlane(Float_t zp) {
+    Point3d point = {zp/z*x+origin.x,zp/z*y+origin.y,zp+origin.z};
+    return point;
+  };
+  Point3d origin;
+  Float_t mag;
+  Float_t x;
+  Float_t y;
+  Float_t z;
+};
+
+typedef std::pair<Float_t,Float_t> Boundary;
+
 class Spectra {
 public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
@@ -59,6 +99,8 @@ public :
    static void InitParameters();
    void DivideTargetThickness(TH1F*);
    void EstimateSolidAngleNorm(TH1F*,Int_t);
+   void CalcSolidAngleNorm(TH1F*,Int_t);
+   std::pair<Int_t,Float_t> CalcPCCell(Float_t,Float_t,Float_t,Float_t);
 };
 
 #endif

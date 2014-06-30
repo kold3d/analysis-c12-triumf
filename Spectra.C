@@ -14,29 +14,6 @@ void Spectra::InitParameters() {
 
 void Spectra::Loop(Int_t incoming)
 {
-//   In a ROOT session, you can do:
-//      Root > .L Spectra.C
-//      Root > Spectra t
-//      Root > t.GetEntry(12); // Fill t data members with entry number 12
-//      Root > t.Show();       // Show values of entry 12
-//      Root > t.Show(16);     // Read and show values of entry 16
-//      Root > t.Loop();       // Loop on all entries
-//
-
-//     This is the loop skeleton where:
-//    jentry is the global entry number in the chain
-//    ientry is the entry number in the current Tree
-//  Note that the argument to GetEntry must be:
-//    jentry for TChain::GetEntry
-//    ientry for TTree::GetEntry and TBranch::GetEntry
-//
-//       To read only selected branches, Insert statements like:
-// METHOD1:
-//    fChain->SetBranchStatus("*",0);  // disable all branches
-//    fChain->SetBranchStatus("branchname",1);  // activate branchname
-// METHOD2: replace line
-//    fChain->GetEntry(jentry);       //read all branches
-//by  b_branchname->GetEntry(ientry); //read only this branch
    if (fChain == 0) return;
 
 
@@ -91,11 +68,11 @@ void Spectra::Loop(Int_t incoming)
 
       if(detector == 2 && 
 	 (wire[0] == 2  || wire[0] == 3 || wire[0] == 4) && 
-	 fabs(position[0]) < 15) s1->Fill(cm_energy[0]);
+	 fabs(position[0]) < 10) s1->Fill(cm_energy[0]);
 
       if(detector == 2 && 
 	 (wire[0] == 1  || wire[0] == 5 || 
-	  ((wire[0] == 2  || wire[0] == 3 || wire[0] == 4) && fabs(position[0]) > 15)))
+	  ((wire[0] == 2  || wire[0] == 3 || wire[0] == 4) && fabs(position[0]) > 10)))
 	 s2->Fill(cm_energy[0]);
 
       if((detector == 3 || detector == 1) && 
@@ -119,27 +96,27 @@ void Spectra::Loop(Int_t incoming)
    c1->Divide(3,2);
    c1->cd(1);
    DivideTargetThickness(s1);
-   EstimateSolidAngleNorm(s1,1);
+   CalcSolidAngleNorm(s1,1);
    s1->Draw();
    c1->cd(2);
    DivideTargetThickness(s2);
-   EstimateSolidAngleNorm(s2,2);
+   CalcSolidAngleNorm(s2,2);
    s2->Draw();
    c1->cd(3);
    DivideTargetThickness(s3);
-   EstimateSolidAngleNorm(s3,3);
+   CalcSolidAngleNorm(s3,3);
    s3->Draw();
    c1->cd(4);
    DivideTargetThickness(s4);
-   EstimateSolidAngleNorm(s4,4);
+   CalcSolidAngleNorm(s4,4);
    s4->Draw();
    c1->cd(5);
    DivideTargetThickness(s5);
-   EstimateSolidAngleNorm(s5,5);
+   CalcSolidAngleNorm(s5,5);
    s5->Draw();
    c1->cd(6);
    DivideTargetThickness(s6);
-   EstimateSolidAngleNorm(s6,6);
+   CalcSolidAngleNorm(s6,6);
    s6->Draw();
    
    s1->Scale(1./incoming);
@@ -197,7 +174,7 @@ void Spectra::EstimateSolidAngleNorm(TH1F* f, Int_t region) {
     Double_t binContent = f->GetBinContent(i);
     Double_t binError = f->GetBinError(i);
     Double_t delta_x = methane.CalcRange(79.76,binCenter);
-    Double_t x;
+    Double_t x=0.;
     if(region == 1) x = 0;
     else if(region == 2) x = 20.;
     else if(region == 3) x = 42.21;
@@ -210,6 +187,198 @@ void Spectra::EstimateSolidAngleNorm(TH1F* f, Int_t region) {
     f->SetBinContent(i,binContent);
     f->SetBinError(i,binError);
   }
+}
+
+void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
+  Float_t elementSize = 1.;
+
+  Float_t gasConstant = 8.3144621;
+  Float_t torrInPa = 133.322368;
+  Float_t molarMassMethane = 0.01604;
+  Float_t density = pressure*torrInPa*molarMassMethane/
+    gasConstant/temperature*0.001;
+
+  Float_t m2 = 1.;
+  Float_t m1 = 12.;
+
+  EnergyLoss carbon("dEdx_carbon_methane_290K_400torr.dat",
+		     density*100);
+ 
+  Int_t i_size = f->GetSize();
+  TAxis *xaxis = f->GetXaxis();
+  for(Int_t i=1;i<i_size-1;i++){
+    printf("Calculating solid angle for Region %d, Bin %d\n",region,i);
+
+    Double_t binCenter = xaxis->GetBinCenter(i);
+    binCenter *=  (m1+m2)/m2;
+    Double_t binContent = f->GetBinContent(i);
+    if(binContent == 0.) continue;
+    Double_t binError = f->GetBinError(i);
+    Double_t depth = carbon.CalcRange(79.76,binCenter);
+    Double_t z = 513.-depth;
+    
+    Float_t sum = 0.;
+    if(region == 1) {
+      for(Float_t dx = -25.;dx<25.;dx+=elementSize) {
+	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  //printf("%f %f %f %f\n", dx, dy, z, pc.second);
+	  if((pc.first == 2 || pc.first ==3 || pc.first ==4) && fabs(pc.second) < 10.)
+	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
+	}
+      }
+    } else if(region == 2) {
+      for(Float_t dx = -25.;dx<25.;dx+=elementSize) {
+	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  if(pc.first == 1  || pc.first == 5 || 
+	     ((pc.first == 2  || pc.first == 3 || pc.first == 4) && fabs(pc.second) > 10.))
+	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
+	}
+      }
+    } else if(region == 3) {
+      for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
+	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  if(fabs(pc.second) > 35.96 && fabs(pc.second) < 48.46)
+	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
+	}
+      }
+      sum*=2.;
+    } else if(region == 4) {
+      for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
+	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  if(fabs(pc.second) > 48.46 && fabs(pc.second) < 60.96) 
+	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
+	}
+      }
+      sum*=2.;
+    } else if(region == 5) {
+      for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
+	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  if(fabs(pc.second) > 60.96 && fabs(pc.second) < 73.46) 
+	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
+	}
+      }
+      sum*=2.;
+    } else if(region == 6) {
+      for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
+	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  if(fabs(pc.second) > 73.46) 
+	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
+	}
+      }
+      sum*=2.;
+    } 
+
+    if(sum == 0.) {
+      printf("Solid angle was zero!\n");
+      f->SetBinContent(i,0.);
+      f->SetBinError(i,0.);
+    } else {
+      binContent /= sum;
+      binError /= sum;
+      f->SetBinContent(i,binContent);
+      f->SetBinError(i,binError);
+    }
+  }
+}
+
+std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t depth, Float_t carbonEnergy) {
+  Float_t m1 = 12.;
+  Float_t m2 = 1.;
+
+  Float_t gasConstant = 8.3144621;
+  Float_t torrInPa = 133.322368;
+  Float_t molarMassMethane = 0.01604;
+  Float_t density = pressure*torrInPa*molarMassMethane/
+    gasConstant/temperature*0.001;
+
+  EnergyLoss proton("dEdx_proton_methane_290K_400torr.dat",
+		     density*100);
+		    
+  Float_t SiToAnode = 28.5;
+  Float_t cellWidth = 10.16;
+  Float_t windowToSi = 513.;
+
+  Float_t SiToBack  = SiToAnode-cellWidth/2.;
+  Float_t SiToFront = SiToAnode+cellWidth/2.;
+  Float_t z2 = windowToSi-depth;
+  
+  Boundary cell[5];
+  cell[0] = Boundary( -25.4,-15.24);
+  cell[1] = Boundary(-15.24,-5.08);
+  cell[2] = Boundary( -5.08, 5.08);
+  cell[3] = Boundary(  5.08,15.24);
+  cell[4] = Boundary( 15.24,25.4 );
+
+  Point3d siPoint = {x1,y1,0.};
+  Point3d chamberPoint = {0.,0.,z2};
+  Vec3d vec(siPoint,chamberPoint);
+  
+  Char_t entranceCell = -1;
+  Point3d entrancePoint = vec.PointIntersectZPlane(SiToBack);
+  for(UChar_t i = 0;i<5;i++) {
+    if(cell[i].first < entrancePoint.y && entrancePoint.y <= cell[i].second) {
+      entranceCell = i;
+      break;
+    }
+  }
+
+  Char_t exitCell = -1;
+  Point3d exitPoint = vec.PointIntersectZPlane(SiToFront);
+  for(UChar_t i = 0;i<5;i++) {
+    if(cell[i].first < exitPoint.y && exitPoint.y <= cell[i].second) {
+      exitCell = i;
+      break;
+    }
+  }
+
+  if(entranceCell < 0 || exitCell < 0 ) {
+    printf("Entrance or exit cell not calculated.");
+    return std::pair<Int_t,Float_t>(0.,0.);
+  }
+
+  Float_t protonInitialEnergy = 4.*m1*m2/(m1+m2)/(m1+m2)*vec.z*vec.z*carbonEnergy;
+  Float_t energyAtPC = proton.CalcRemainder(protonInitialEnergy,Vec3d(chamberPoint,exitPoint).mag);
+
+  std::pair<Int_t,Float_t> returnValues;
+  if(entranceCell != exitCell) {
+    Point3d p = entrancePoint;
+    Char_t direction = (exitCell-entranceCell);
+    std::vector<std::pair<UChar_t,Float_t> > lengths;
+    for(UChar_t i = entranceCell;i!=exitCell;i+=direction) {
+      Point3d boundaryPoint = (direction>0) ? vec.PointIntersectYPlane(cell[i].second) :
+	vec.PointIntersectYPlane(cell[i].first);
+      Vec3d tempVec(p,boundaryPoint);
+      Float_t length = tempVec.mag;
+      lengths.push_back(std::pair<UChar_t,Float_t>(i,length));
+      p = boundaryPoint;
+    }
+    Vec3d tempVec(p,exitPoint);
+    lengths.push_back(std::pair<UChar_t,Float_t>(exitCell,tempVec.mag));
+    Float_t lastEnergy = energyAtPC;
+    Float_t highestEnergy = 0.;
+    UChar_t highestCell = 0;
+    for(UChar_t i = lengths.size()-1;i>0;i--) {
+      Float_t newEnergy = proton.CalcRemainder(lastEnergy,lengths[i].second);
+      if((lastEnergy-newEnergy) > highestEnergy) {
+	highestEnergy = lastEnergy - newEnergy;
+	highestCell = lengths[i].first;
+      }
+      lastEnergy = newEnergy;
+    }
+    returnValues.first = highestCell+1;
+  } else {
+    returnValues.first = entranceCell+1;
+  }
+  Float_t crossing = vec.PointIntersectZPlane(SiToAnode).x;
+  returnValues.second = crossing;
+  
+  return returnValues;
 }
 
 Float_t Spectra::pressure;
