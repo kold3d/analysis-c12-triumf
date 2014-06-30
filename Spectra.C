@@ -439,8 +439,8 @@ std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t region, Float_t cmEnerg
   	EnergyLoss carbon("dEdx_carbon_methane_290K_400torr.dat",
 		     density*100);
 
-  	Double_t depth_bound = carbon.CalcRange(79.76,binCenter);
-  	Double_t z_bound = 513.-depth;
+  	Double_t depth_bound = carbon.CalcRange(79.76,cmEnergy);
+  	Double_t z_bound = 513.-depth_bound;
   	Double_t dist_first_wire = 29.7;
   	Double_t dist_second_wire = 42.2;
 
@@ -452,9 +452,9 @@ std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t region, Float_t cmEnerg
   	wire_fixed_values[4] = Boundary(60.96,73.46);
   	wire_fixed_values[5] = Boundary(73.46,85.96);
 
-  	Boundary wire_float;
+  	Boundary wire_float[5];
   	for(Int_t i_wire = 0; i_wire<=5;i_wire++){
-  		wire_float[i_wire] = Boundary(wire_fixed_values[i].first*dist_first_wire/z_bound,wire_fixed_values[i].second*dist_first_wire/z_bound)
+	  wire_float[i_wire] = Boundary(wire_fixed_values[i_wire].first*dist_first_wire/z_bound,wire_fixed_values[i_wire].second*dist_first_wire/z_bound);
   	}
 
   	std::pair<Float_t,Float_t> returnBounds;

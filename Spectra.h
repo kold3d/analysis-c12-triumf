@@ -101,6 +101,7 @@ public :
    void EstimateSolidAngleNorm(TH1F*,Int_t);
    void CalcSolidAngleNorm(TH1F*,Int_t);
    std::pair<Int_t,Float_t> CalcPCCell(Float_t,Float_t,Float_t,Float_t);
+   std::pair<Float_t,Float_t> CalcPCBoundary(Int_t,Float_t);
 };
 
 #endif
