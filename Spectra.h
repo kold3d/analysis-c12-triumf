@@ -17,6 +17,13 @@
 
 // Fixed size dimensions of array or collections stored in the TTree if any.
 
+typedef struct PCBoundEntry {
+  Float_t cmEnergy;
+  Float_t LeftPCBound;
+  Float_t RightPCBound;
+} PCBoundEntry;
+typedef std::map<int,std::vector<PCBoundEntry> > PCBoundTable;
+
 typedef struct Vect3d {
   Float_t x;
   Float_t y;
@@ -92,6 +99,10 @@ public :
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 
+   static void      CalcPCBoundTable();
+   static void      ReadPCBoundTable();
+   static std::pair<Float_t,Float_t> LookupPCBound(Int_t,Float_t);
+
  private:
    static Float_t pressure;
    static Float_t temperature;
@@ -102,6 +113,8 @@ public :
    void CalcSolidAngleNorm(TH1F*,Int_t);
    std::pair<Int_t,Float_t> CalcPCCell(Float_t,Float_t,Float_t,Float_t);
    std::pair<Float_t,Float_t> CalcPCBoundary(Int_t,Float_t);
+
+   static PCBoundTable pctable;
 };
 
 #endif
