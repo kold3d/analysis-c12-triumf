@@ -176,7 +176,7 @@ void Spectra::EstimateSolidAngleNorm(TH1F* f, Int_t region) {
     Double_t delta_x = methane.CalcRange(79.76,binCenter);
     Double_t x=0.;
     if(region == 1) x = 0;
-    else if(region == 2) x = 20.;
+    else if(region == 2) x = 17.5;
     else if(region == 3) x = 42.21;
     else if(region == 4) x = 54.71;
     else if(region == 5) x = 67.21;
@@ -201,12 +201,15 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
   Float_t m2 = 1.;
   Float_t m1 = 12.;
 
+  TFile* file = new TFile(Form("angle_dists/region_%d.root",region),"recreate");
+      
   EnergyLoss carbon("dEdx_carbon_methane_290K_400torr.dat",
 		     density*100);
  
   Int_t i_size = f->GetSize();
   TAxis *xaxis = f->GetXaxis();
   for(Int_t i=1;i<i_size-1;i++){
+    TH1F* h = new TH1F(Form("bin_%d",i+1),Form("bin_%d",i+1),180,0,180);
     printf("Calculating solid angle for Region %d, Bin %d\n",region,i);
 
     Double_t binCenter = xaxis->GetBinCenter(i);
@@ -223,8 +226,11 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
 	  //printf("%f %f %f %f\n", dx, dy, z, pc.second);
-	  if((pc.first == 2 || pc.first ==3 || pc.first ==4) && fabs(pc.second) < 10.)
+	  if((pc.first == 2 || pc.first ==3 || pc.first ==4) && fabs(pc.second) < 10.) {
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
+	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+	    h->Fill(angle);
+	  }
 	}
       }
     } else if(region == 2) {
@@ -232,16 +238,22 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
 	  if(pc.first == 1  || pc.first == 5 || 
-	     ((pc.first == 2  || pc.first == 3 || pc.first == 4) && fabs(pc.second) > 10.))
+	     ((pc.first == 2  || pc.first == 3 || pc.first == 4) && fabs(pc.second) > 10.)) {
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
+	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+	    h->Fill(angle);
+	  }
 	}
       }
     } else if(region == 3) {
       for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
-	  if(fabs(pc.second) > 35.96 && fabs(pc.second) < 48.46)
-	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
+	  if(fabs(pc.second) > 35.96 && fabs(pc.second) < 48.46) {
+	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
+	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+	    h->Fill(angle);	  	    
+	  }
 	}
       }
       sum*=2.;
@@ -250,7 +262,9 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
 	  if(fabs(pc.second) > 48.46 && fabs(pc.second) < 60.96) 
-	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
+	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	
+	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+	    h->Fill(angle);  	    
 	}
       }
       sum*=2.;
@@ -258,8 +272,11 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
-	  if(fabs(pc.second) > 60.96 && fabs(pc.second) < 73.46) 
-	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
+	  if(fabs(pc.second) > 60.96 && fabs(pc.second) < 73.46) {
+	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
+	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+	    h->Fill(angle);
+	  }
 	}
       }
       sum*=2.;
@@ -267,8 +284,11 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
-	  if(fabs(pc.second) > 73.46) 
-	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
+	  if(fabs(pc.second) > 73.46) {
+	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
+	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+	    h->Fill(angle);	  	    
+	  }
 	}
       }
       sum*=2.;
@@ -284,7 +304,9 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       f->SetBinContent(i,binContent);
       f->SetBinError(i,binError);
     }
+    h->Write();
   }
+  file->Close();
 }
 
 std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t depth, Float_t carbonEnergy) {
