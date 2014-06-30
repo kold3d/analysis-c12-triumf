@@ -66,29 +66,35 @@ void Spectra::Loop(Int_t incoming)
       
       if(!proton_cut->IsInside(measured_energy,sum_dE[0])) continue;
 
+      std::pair<Float_t,Float_t> pc_bound = CalcPCBoundary(1,cm_energy[0]);
       if(detector == 2 && 
 	 (wire[0] == 2  || wire[0] == 3 || wire[0] == 4) && 
-	 fabs(position[0]) < 10) s1->Fill(cm_energy[0]);
+	 fabs(position[0]) < pc_bound.second) s1->Fill(cm_energy[0]);
 
+		pc_bound = CalcPCBoundary(2,cm_energy[0]);
       if(detector == 2 && 
 	 (wire[0] == 1  || wire[0] == 5 || 
-	  ((wire[0] == 2  || wire[0] == 3 || wire[0] == 4) && fabs(position[0]) > 10)))
+	  ((wire[0] == 2  || wire[0] == 3 || wire[0] == 4) && fabs(position[0]) > pc_bound.first)))
 	 s2->Fill(cm_energy[0]);
 
+		pc_bound = CalcPCBoundary(3,cm_energy[0]);
       if((detector == 3 || detector == 1) && 
-	 fabs(position[0]) > 35.96 && fabs(position[0]) < 48.46) 
+	 fabs(position[0]) > pc_bound.first && fabs(position[0]) < pc_bound.second) 
 	s3->Fill(cm_energy[0]);
 
+		pc_bound = CalcPCBoundary(4,cm_energy[0]);
       if((detector == 3 || detector == 1) && 
-	 fabs(position[0]) > 48.46 && fabs(position[0]) < 60.96) 
+	 fabs(position[0]) > pc_bound.first && fabs(position[0]) < pc_bound.second) 
 	s4->Fill(cm_energy[0]);
 
+		pc_bound = CalcPCBoundary(5,cm_energy[0]);
       if((detector == 3 || detector == 1) && 
-	 fabs(position[0]) > 60.96 && fabs(position[0]) < 73.46) 
+	 fabs(position[0]) > pc_bound.first && fabs(position[0]) < pc_bound.second) 
 	s5->Fill(cm_energy[0]);
 
+		pc_bound = CalcPCBoundary(6,cm_energy[0]);
      if((detector == 3 || detector == 1) && 
-	 fabs(position[0]) > 73.46) 
+	 fabs(position[0]) > pc_bound.first && fabs(position[0]) < pc_bound.second) 
 	s6->Fill(cm_energy[0]);
    }
    
@@ -222,8 +228,9 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -25.;dx<25.;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  std::pair<Float_t,Float_t> pc_bound = CalcPCBoundary(1,binCenter*m2/(m1+m2));
 	  //printf("%f %f %f %f\n", dx, dy, z, pc.second);
-	  if((pc.first == 2 || pc.first ==3 || pc.first ==4) && fabs(pc.second) < 10.)
+	  if((pc.first == 2 || pc.first ==3 || pc.first ==4) && fabs(pc.second) < pc_bound.second)
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
 	}
       }
@@ -231,8 +238,9 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -25.;dx<25.;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  std::pair<Float_t,Float_t> pc_bound = CalcPCBoundary(2,binCenter*m2/(m1+m2));
 	  if(pc.first == 1  || pc.first == 5 || 
-	     ((pc.first == 2  || pc.first == 3 || pc.first == 4) && fabs(pc.second) > 10.))
+	     ((pc.first == 2  || pc.first == 3 || pc.first == 4) && fabs(pc.second) > pc_bound.first))
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
 	}
       }
@@ -240,7 +248,8 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
-	  if(fabs(pc.second) > 35.96 && fabs(pc.second) < 48.46)
+	  std::pair<Float_t,Float_t> pc_bound = CalcPCBoundary(3,binCenter*m2/(m1+m2));
+	  if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second)
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
 	}
       }
@@ -249,7 +258,8 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
-	  if(fabs(pc.second) > 48.46 && fabs(pc.second) < 60.96) 
+	  std::pair<Float_t,Float_t> pc_bound = CalcPCBoundary(4,binCenter*m2/(m1+m2));
+	  if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) 
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
 	}
       }
@@ -258,7 +268,8 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
-	  if(fabs(pc.second) > 60.96 && fabs(pc.second) < 73.46) 
+	  std::pair<Float_t,Float_t> pc_bound = CalcPCBoundary(5,binCenter*m2/(m1+m2));
+	  if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) 
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
 	}
       }
@@ -267,7 +278,8 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
-	  if(fabs(pc.second) > 73.46) 
+	  std::pair<Float_t,Float_t> pc_bound = CalcPCBoundary(6,binCenter*m2/(m1+m2));
+	  if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) 
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
 	}
       }
@@ -379,6 +391,46 @@ std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t dep
   returnValues.second = crossing;
   
   return returnValues;
+}
+
+std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t region, Float_t cmEnergy){
+	Float_t m1 = 12.;
+  	Float_t m2 = 1.;
+
+  	cmEnergy *= (m1+m2)/m2;
+
+  	Float_t gasConstant = 8.3144621;
+  	Float_t torrInPa = 133.322368;
+  	Float_t molarMassMethane = 0.01604;
+  	Float_t density = pressure*torrInPa*molarMassMethane/
+    	gasConstant/temperature*0.001;
+
+  	EnergyLoss carbon("dEdx_carbon_methane_290K_400torr.dat",
+		     density*100);
+
+  	Double_t depth_bound = carbon.CalcRange(79.76,binCenter);
+  	Double_t z_bound = 513.-depth;
+  	Double_t dist_first_wire = 29.7;
+  	Double_t dist_second_wire = 42.2;
+
+  	Boundary wire_fixed_values[5];
+  	wire_fixed_values[0] = Boundary(0.,10.);
+  	wire_fixed_values[1] = Boundary(10.,25.);
+  	wire_fixed_values[2] = Boundary(35.96,48.46);
+  	wire_fixed_values[3] = Boundary(48.46,60.96);
+  	wire_fixed_values[4] = Boundary(60.96,73.46);
+  	wire_fixed_values[5] = Boundary(73.46,85.96);
+
+  	Boundary wire_float;
+  	for(Int_t i_wire = 0; i_wire<=5;i_wire++){
+  		wire_float[i_wire] = Boundary(wire_fixed_values[i].first*dist_first_wire/z_bound,wire_fixed_values[i].second*dist_first_wire/z_bound)
+  	}
+
+  	std::pair<Float_t,Float_t> returnBounds;
+  	returnBounds.first = wire_float[region-1].first;
+  	returnBounds.second = wire_float[region-1].second;
+
+  	return returnBounds;
 }
 
 Float_t Spectra::pressure;
