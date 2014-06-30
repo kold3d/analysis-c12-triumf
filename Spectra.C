@@ -209,7 +209,8 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
   Int_t i_size = f->GetSize();
   TAxis *xaxis = f->GetXaxis();
   for(Int_t i=1;i<i_size-1;i++){
-    TH1F* h = new TH1F(Form("bin_%d",i+1),Form("bin_%d",i+1),180,0,180);
+    TH1F* h = new TH1F(Form("bin_%d_lab_ik",i+1),Form("bin_%d_lab_ik",i+1),180,0,180);
+    TH1F* h2 = new TH1F(Form("bin_%d_cm_fk",i+1),Form("bin_%d_cm_fk",i+1),180,0,180);
     printf("Calculating solid angle for Region %d, Bin %d\n",region,i);
 
     Double_t binCenter = xaxis->GetBinCenter(i);
@@ -225,11 +226,11 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -25.;dx<25.;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
-	  //printf("%f %f %f %f\n", dx, dy, z, pc.second);
 	  if((pc.first == 2 || pc.first ==3 || pc.first ==4) && fabs(pc.second) < 10.) {
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
 	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);
+	    h2->Fill(180-2.*angle);
 	  }
 	}
       }
@@ -242,6 +243,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
 	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);
+	    h2->Fill(180-2.*angle);
 	  }
 	}
       }
@@ -253,6 +255,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
 	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);	  	    
+	    h2->Fill(180-2.*angle);
 	  }
 	}
       }
@@ -261,10 +264,12 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
-	  if(fabs(pc.second) > 48.46 && fabs(pc.second) < 60.96) 
+	  if(fabs(pc.second) > 48.46 && fabs(pc.second) < 60.96) {
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	
 	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);  	    
+	    h2->Fill(180-2.*angle);
+	  }
 	}
       }
       sum*=2.;
@@ -276,6 +281,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
 	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);
+	    h2->Fill(180-2.*angle);
 	  }
 	}
       }
@@ -288,6 +294,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
 	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);	  	    
+	    h2->Fill(180-2.*angle);
 	  }
 	}
       }
@@ -299,12 +306,13 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       f->SetBinContent(i,0.);
       f->SetBinError(i,0.);
     } else {
-      binContent /= sum;
-      binError /= sum;
+      binContent /= 4.*sum*cos(h->GetMean()*3.14159/180);
+      binError /= 4.*sum*cos(h->GetMean()*3.14159/180);
       f->SetBinContent(i,binContent);
       f->SetBinError(i,binError);
     }
     h->Write();
+    h2->Write();
   }
   file->Close();
 }
