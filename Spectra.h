@@ -16,6 +16,7 @@
 // Header file for the classes stored in the TTree if any.
 
 // Fixed size dimensions of array or collections stored in the TTree if any.
+class EnergyLoss;
 
 typedef struct Vect3d {
   Float_t x;
@@ -95,6 +96,12 @@ public :
  private:
    static Float_t pressure;
    static Float_t temperature;
+   static EnergyLoss* proton;
+   static EnergyLoss* carbon;
+   static Float_t density;
+   static Float_t m1;
+   static Float_t m2;
+   static Float_t beam_energy;
 
    static void InitParameters();
    void DivideTargetThickness(TH1F*);

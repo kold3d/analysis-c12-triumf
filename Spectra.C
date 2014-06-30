@@ -8,8 +8,21 @@
 #include "EnergyLoss.h"
 
 void Spectra::InitParameters() {
+  beam_energy      = 79.76;  //MeV, after havar
   pressure         = 397.;   //In Torr
   temperature      = 290.;   //In Kelvin
+  m1 = 12.;
+  m2 =  1.;
+
+  Float_t gasConstant = 8.3144621;
+  Float_t torrInPa = 133.322368;
+  Float_t molarMassMethane = 0.01604;
+
+  density = pressure*torrInPa*molarMassMethane/
+    gasConstant/temperature*0.001;
+ 
+  proton = new EnergyLoss("dEdx_proton_methane_290K_400torr.dat",density*100.);
+  carbon = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
 }
 
 void Spectra::Loop(Int_t incoming)
@@ -63,7 +76,7 @@ void Spectra::Loop(Int_t incoming)
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
-      
+
       if(!proton_cut->IsInside(measured_energy,sum_dE[0])) continue;
 
       std::pair<Float_t,Float_t> pc_bound = CalcPCBoundary(1,cm_energy[0]);
@@ -71,28 +84,28 @@ void Spectra::Loop(Int_t incoming)
 	 (wire[0] == 2  || wire[0] == 3 || wire[0] == 4) && 
 	 fabs(position[0]) < pc_bound.second) s1->Fill(cm_energy[0]);
 
-		pc_bound = CalcPCBoundary(2,cm_energy[0]);
+      pc_bound = CalcPCBoundary(2,cm_energy[0]);
       if(detector == 2 && 
 	 (wire[0] == 1  || wire[0] == 5 || 
 	  ((wire[0] == 2  || wire[0] == 3 || wire[0] == 4) && fabs(position[0]) > pc_bound.first)))
 	 s2->Fill(cm_energy[0]);
 
-		pc_bound = CalcPCBoundary(3,cm_energy[0]);
+      pc_bound = CalcPCBoundary(3,cm_energy[0]);
       if((detector == 3 || detector == 1) && 
 	 fabs(position[0]) > pc_bound.first && fabs(position[0]) < pc_bound.second) 
 	s3->Fill(cm_energy[0]);
 
-		pc_bound = CalcPCBoundary(4,cm_energy[0]);
+      pc_bound = CalcPCBoundary(4,cm_energy[0]);
       if((detector == 3 || detector == 1) && 
 	 fabs(position[0]) > pc_bound.first && fabs(position[0]) < pc_bound.second) 
 	s4->Fill(cm_energy[0]);
 
-		pc_bound = CalcPCBoundary(5,cm_energy[0]);
+      pc_bound = CalcPCBoundary(5,cm_energy[0]);
       if((detector == 3 || detector == 1) && 
 	 fabs(position[0]) > pc_bound.first && fabs(position[0]) < pc_bound.second) 
 	s5->Fill(cm_energy[0]);
 
-		pc_bound = CalcPCBoundary(6,cm_energy[0]);
+      pc_bound = CalcPCBoundary(6,cm_energy[0]);
      if((detector == 3 || detector == 1) && 
 	 fabs(position[0]) > pc_bound.first && fabs(position[0]) < pc_bound.second) 
 	s6->Fill(cm_energy[0]);
@@ -133,27 +146,19 @@ void Spectra::Loop(Int_t incoming)
    s6->Scale(1./incoming);
 }
 
-void Spectra::DivideTargetThickness(TH1F *f){
-  Float_t gasConstant = 8.3144621;
-  Float_t torrInPa = 133.322368;
-  Float_t molarMassMethane = 0.01604;
-  Float_t density = pressure*torrInPa*molarMassMethane/
-    gasConstant/temperature*0.001;
-  
-  EnergyLoss methane("dEdx_carbon_methane_290K_400torr.dat",
-		     density*100);
-    
+void Spectra::DivideTargetThickness(TH1F *f){    
   Int_t i_size = f->GetSize();
   TAxis *xaxis = f->GetXaxis();
   for(Int_t i=1;i<i_size-1;i++){
     Double_t binLowEdge = xaxis->GetBinLowEdge(i);
     Double_t binUpEdge = xaxis->GetBinUpEdge(i);
-    binLowEdge *= 13.0;
-    binUpEdge *= 13.0; // From C.M. to Lab Frame
+    binLowEdge *= (m1+m2)/m2;
+    binUpEdge *= (m1+m2)/m2; // From C.M. to Lab Frame
     Double_t binContent = f->GetBinContent(i);
     Double_t binError = f->GetBinError(i);
-    Double_t delta_x = methane.CalcRange(binUpEdge,binLowEdge);
+    Double_t delta_x = carbon->CalcRange(binUpEdge,binLowEdge);
     delta_x /= 10.0;
+    Float_t molarMassMethane = 0.01604;
     Double_t factor = 4.e-27*density*delta_x*TMath::Na()/molarMassMethane;
     binContent /= factor;
     binError /= factor;
@@ -163,23 +168,14 @@ void Spectra::DivideTargetThickness(TH1F *f){
 }
 
 void Spectra::EstimateSolidAngleNorm(TH1F* f, Int_t region) {
-  Float_t gasConstant = 8.3144621;
-  Float_t torrInPa = 133.322368;
-  Float_t molarMassMethane = 0.01604;
-  Float_t density = pressure*torrInPa*molarMassMethane/
-    gasConstant/temperature*0.001;
-
-  EnergyLoss methane("dEdx_carbon_methane_290K_400torr.dat",
-		     density*100);
-    
   Int_t i_size = f->GetSize();
   TAxis *xaxis = f->GetXaxis();
   for(Int_t i=1;i<i_size-1;i++){
     Double_t binCenter = xaxis->GetBinCenter(i);
-    binCenter *= 13.0;
+    binCenter *= (m1+m2)/m2;
     Double_t binContent = f->GetBinContent(i);
     Double_t binError = f->GetBinError(i);
-    Double_t delta_x = methane.CalcRange(79.76,binCenter);
+    Double_t delta_x = carbon->CalcRange(beam_energy,binCenter);
     Double_t x=0.;
     if(region == 1) x = 0;
     else if(region == 2) x = 17.5;
@@ -198,20 +194,8 @@ void Spectra::EstimateSolidAngleNorm(TH1F* f, Int_t region) {
 void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
   Float_t elementSize = 1.;
 
-  Float_t gasConstant = 8.3144621;
-  Float_t torrInPa = 133.322368;
-  Float_t molarMassMethane = 0.01604;
-  Float_t density = pressure*torrInPa*molarMassMethane/
-    gasConstant/temperature*0.001;
-
-  Float_t m2 = 1.;
-  Float_t m1 = 12.;
-
   TFile* file = new TFile(Form("angle_dists/region_%d.root",region),"recreate");
-      
-  EnergyLoss carbon("dEdx_carbon_methane_290K_400torr.dat",
-		     density*100);
- 
+       
   Int_t i_size = f->GetSize();
   TAxis *xaxis = f->GetXaxis();
   for(Int_t i=1;i<i_size-1;i++){
@@ -224,7 +208,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
     Double_t binContent = f->GetBinContent(i);
     if(binContent == 0.) continue;
     Double_t binError = f->GetBinError(i);
-    Double_t depth = carbon.CalcRange(79.76,binCenter);
+    Double_t depth = carbon->CalcRange(beam_energy,binCenter);
     Double_t z = 513.-depth;
     
     Float_t sum = 0.;
@@ -333,15 +317,6 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t depth, Float_t carbonEnergy) {
   Float_t m1 = 12.;
   Float_t m2 = 1.;
-
-  Float_t gasConstant = 8.3144621;
-  Float_t torrInPa = 133.322368;
-  Float_t molarMassMethane = 0.01604;
-  Float_t density = pressure*torrInPa*molarMassMethane/
-    gasConstant/temperature*0.001;
-
-  EnergyLoss proton("dEdx_proton_methane_290K_400torr.dat",
-		     density*100);
 		    
   Float_t SiToAnode = 28.5;
   Float_t cellWidth = 10.16;
@@ -386,7 +361,7 @@ std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t dep
   }
 
   Float_t protonInitialEnergy = 4.*m1*m2/(m1+m2)/(m1+m2)*vec.z*vec.z*carbonEnergy;
-  Float_t energyAtPC = proton.CalcRemainder(protonInitialEnergy,Vec3d(chamberPoint,exitPoint).mag);
+  Float_t energyAtPC = proton->CalcRemainder(protonInitialEnergy,Vec3d(chamberPoint,exitPoint).mag);
 
   std::pair<Int_t,Float_t> returnValues;
   if(entranceCell != exitCell) {
@@ -407,7 +382,7 @@ std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t dep
     Float_t highestEnergy = 0.;
     UChar_t highestCell = 0;
     for(UChar_t i = lengths.size()-1;i>0;i--) {
-      Float_t newEnergy = proton.CalcRemainder(lastEnergy,lengths[i].second);
+      Float_t newEnergy = proton->CalcRemainder(lastEnergy,lengths[i].second);
       if((lastEnergy-newEnergy) > highestEnergy) {
 	highestEnergy = lastEnergy - newEnergy;
 	highestCell = lengths[i].first;
@@ -425,9 +400,6 @@ std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t dep
 }
 
 std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t region, Float_t cmEnergy){
-	Float_t m1 = 12.;
-  	Float_t m2 = 1.;
-
   	cmEnergy *= (m1+m2)/m2;
 
   	Float_t gasConstant = 8.3144621;
@@ -436,15 +408,15 @@ std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t region, Float_t cmEnerg
   	Float_t density = pressure*torrInPa*molarMassMethane/
     	gasConstant/temperature*0.001;
 
-  	EnergyLoss carbon("dEdx_carbon_methane_290K_400torr.dat",
-		     density*100);
+  	//EnergyLoss carbon("dEdx_carbon_methane_290K_400torr.dat",
+	//		     density*100);
 
-  	Double_t depth_bound = carbon.CalcRange(79.76,cmEnergy);
-  	Double_t z_bound = 513.-depth_bound;
-  	Double_t dist_first_wire = 29.7;
+  	//Double_t depth_bound = carbon.CalcRange(79.76,cmEnergy);
+  	Double_t z_bound = 513.;//-depth_bound;
+  	Double_t dist_first_wire = z_bound;//29.7;
   	Double_t dist_second_wire = 42.2;
 
-  	Boundary wire_fixed_values[5];
+  	Boundary wire_fixed_values[6];
   	wire_fixed_values[0] = Boundary(0.,10.);
   	wire_fixed_values[1] = Boundary(10.,25.);
   	wire_fixed_values[2] = Boundary(35.96,48.46);
@@ -452,7 +424,7 @@ std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t region, Float_t cmEnerg
   	wire_fixed_values[4] = Boundary(60.96,73.46);
   	wire_fixed_values[5] = Boundary(73.46,85.96);
 
-  	Boundary wire_float[5];
+  	Boundary wire_float[6];
   	for(Int_t i_wire = 0; i_wire<=5;i_wire++){
 	  wire_float[i_wire] = Boundary(wire_fixed_values[i_wire].first*dist_first_wire/z_bound,wire_fixed_values[i_wire].second*dist_first_wire/z_bound);
   	}
@@ -466,4 +438,9 @@ std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t region, Float_t cmEnerg
 
 Float_t Spectra::pressure;
 Float_t Spectra::temperature;
-
+EnergyLoss* Spectra::proton;
+EnergyLoss* Spectra::carbon;
+Float_t Spectra::density;
+Float_t Spectra::m1;
+Float_t Spectra::m2;
+Float_t Spectra::beam_energy;

@@ -17,6 +17,20 @@ void EnergyAngle::InitParameters() {
   beam_energy      = 79.76; //In MeV, after window
   pressure         = 397.;   //In Torr
   temperature      = 290.;   //In Kelvin
+  m1 = 12.;
+  m2 = 1.;
+
+  Float_t gasConstant = 8.3144621;
+  Float_t torrInPa = 133.322368;
+  Float_t molarMassMethane = 0.01604;
+
+  Float_t density = pressure*torrInPa*molarMassMethane/
+    gasConstant/temperature*0.001;
+
+  carbon = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
+  proton = new EnergyLoss("dEdx_proton_methane_290K_400torr.dat",density*100.);
+
+
   
   //Noise peaks
   wire_offset[0] = std::pair<float,float>(0.0,0.0);
@@ -287,24 +301,12 @@ void EnergyAngle::ReadLookupTable() {
 }
 
 void EnergyAngle::CalcLookupTable() {
-  Float_t gasConstant = 8.3144621;
-  Float_t torrInPa = 133.322368;
-  Float_t molarMassMethane = 0.01604;
-
-  Float_t density = pressure*torrInPa*molarMassMethane/
-    gasConstant/temperature*0.001;
-
-  printf("density: %f\n",density);
-
-  EnergyLoss  carbon("dEdx_carbon_methane_290K_400torr.dat",density*100.);
-  EnergyLoss  proton("dEdx_proton_methane_290K_400torr.dat",density*100.);
+  InitParameters();
 
   Float_t deltaBeamE = 0.10;
   Float_t distanceToFirstWire = 472.;
   Float_t distanceToSecondWire = 484.5; 
   Float_t distanceToSiDets= 513.;
-  Float_t m1 = 12.;
-  Float_t m2 = 1.;
 
   Float_t wireHeight[8] = {
     -20.32,
@@ -319,21 +321,21 @@ void EnergyAngle::CalcLookupTable() {
   
   table.clear();
   FILE* out = fopen("lookup_table.out","w");
-  for(UChar_t wire = 2;wire<8;wire++) {
+  for(UChar_t wire = 0;wire<8;wire++) {
     if(wire==7) {
-      //table[wire]=table[5];
+      table[wire]=table[5];
       continue;
     } else if(wire == 4) {
-      //table[wire]=table[0];
+      table[wire]=table[0];
       continue;
     } else if(wire == 3) {
-      //table[wire] = table[1];
+      table[wire] = table[1];
       continue;
     }
     
     for(Float_t x=0.;x<=80.;x+=0.5) {
       for(Float_t E = beam_energy;E>0.;E-=deltaBeamE) {
-	double range = carbon.CalcRange(beam_energy,E);
+	double range = carbon->CalcRange(beam_energy,E);
 	double pointToWire = (wire<5) ? distanceToSecondWire-range :
 	  distanceToFirstWire-range;
 	double distance0 = sqrt(pointToWire*pointToWire+x*x);
@@ -345,7 +347,7 @@ void EnergyAngle::CalcLookupTable() {
 	
 	double protonEmissionEnergy = 4.*m1*m2/(m1+m2)/(m1+m2)*
 	  (distanceToSiDets-range)/r*(distanceToSiDets-range)/r*E;
-	double protonEnergy = proton.CalcRemainder(protonEmissionEnergy,r);
+	double protonEnergy = proton->CalcRemainder(protonEmissionEnergy,r);
 
 	if(protonEnergy<0.005) break;
 
@@ -368,3 +370,10 @@ Float_t EnergyAngle::si_threshold;
 Float_t EnergyAngle::beam_energy;   
 Float_t EnergyAngle::pressure;  
 Float_t EnergyAngle::temperature;      
+std::map<int,std::pair<float,float> > EnergyAngle::wire_offset;
+std::map<int,float> EnergyAngle::wire_gain_diff;
+std::map<int,std::pair<float,float> > EnergyAngle::wire_pos_cal;
+EnergyLoss* EnergyAngle::carbon;
+EnergyLoss* EnergyAngle::proton;
+Float_t EnergyAngle::m1;
+Float_t EnergyAngle::m2;

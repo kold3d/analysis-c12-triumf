@@ -16,6 +16,8 @@
 
 // Fixed size dimensions of array or collections stored in the TTree if any.
 
+class EnergyLoss;
+
 typedef struct LookupEntry {
   Float_t range;
   Float_t r;
@@ -23,6 +25,7 @@ typedef struct LookupEntry {
   Float_t cmEnergy;
   Float_t protonEnergy;
 } LookupEntry;
+
 typedef std::map<int,std::map<float,std::vector<LookupEntry> > > LookupTable;
 
 class EnergyAngle {
@@ -69,7 +72,7 @@ public :
    static std::pair<Float_t,Float_t> LookupCMEnergyAngle(UChar_t,Float_t,Float_t);
 
  private:
-   void InitParameters();
+   static void InitParameters();
    Float_t CalcPosition(UChar_t, Float_t, Float_t);
    void MatchPC(UChar_t, Float_t&, Float_t&);
 
@@ -79,11 +82,17 @@ public :
    static Float_t pressure;  
    static Float_t temperature;      
 
-   std::map<int,std::pair<float,float> > wire_offset;
-   std::map<int,float> wire_gain_diff;
-   std::map<int,std::pair<float,float> > wire_pos_cal;
+   static std::map<int,std::pair<float,float> > wire_offset;
+   static std::map<int,float> wire_gain_diff;
+   static std::map<int,std::pair<float,float> > wire_pos_cal;
    
    static LookupTable table;
+
+   static EnergyLoss* carbon;
+   static EnergyLoss* proton;
+
+   static Float_t m1;
+   static Float_t m2;
 };
 
 #endif
