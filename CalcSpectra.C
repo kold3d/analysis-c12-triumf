@@ -3,6 +3,7 @@ void CalcSpectra(TTree* tree,Int_t incoming) {
   gSystem->CompileMacro("EnergyAngle.C");
   EnergyAngle::ReadLookupTable();
   gSystem->CompileMacro("Spectra.C");
+  Spectra::ReadPCBoundTable();
 
   EnergyAngle t1(tree);
   t1.Loop();
