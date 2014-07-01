@@ -13,7 +13,7 @@ LookupTable EnergyAngle::table;
 void EnergyAngle::InitParameters() {
 
   sum_pc_threshold  = 50.;   //In Channels
-  si_threshold     = 200.;   //In KeV
+  si_threshold     = 350.;   //In KeV
   beam_energy      = 79.76; //In MeV, after window
   pressure         = 397.;   //In Torr
   temperature      = 290.;   //In Kelvin
@@ -43,14 +43,14 @@ void EnergyAngle::InitParameters() {
   wire_offset[7] = std::pair<float,float>(39.6582,38.1933);
 
   //Gain matches from pulser (ratio left to right);
-   wire_gain_diff[0] = 1.00636;
-   wire_gain_diff[1] = 0.95856;
-   wire_gain_diff[2] = 0.95023;
-   wire_gain_diff[3] = 0.99627;
-   wire_gain_diff[4] = 0.97248;
-   wire_gain_diff[5] = 1.04135;
-   wire_gain_diff[6] = 1.04280;
-   wire_gain_diff[7] = 1.01840;
+  wire_gain_diff[0] = std::pair<float,float>(1.00000,1.00636);
+  wire_gain_diff[1] = std::pair<float,float>(1.02192,0.97957);
+  wire_gain_diff[2] = std::pair<float,float>(1.05483,1.00233);
+  wire_gain_diff[3] = std::pair<float,float>(1.02399,1.02017);
+  wire_gain_diff[4] = std::pair<float,float>(0.99870,0.97122);
+  wire_gain_diff[5] = std::pair<float,float>(0.98590,1.02667);
+  wire_gain_diff[6] = std::pair<float,float>(0.95724,0.99821);
+  wire_gain_diff[7] = std::pair<float,float>(1.05401,1.07341);
 
    //Position calibration (slope,intercept)
    wire_pos_cal[0] = std::pair<Float_t,Float_t>( 0.000, 0.000);
@@ -71,6 +71,9 @@ void EnergyAngle::Loop()
   Int_t detector,quadrant,wire[2];
 
   TFile* file = new TFile("energy_angle.root","recreate");
+
+  TH1F* h_no_pos = new TH1F("h_no_pos","h_no_pos",400,0,12000);
+  TH1F* h_all_si = new TH1F("h_all_si","h_all_si",400,0,12000);
 
   TH2F* dE_E[8];
   for(Int_t i = 0;i<8;i++) {
@@ -113,6 +116,8 @@ void EnergyAngle::Loop()
       //If Si energy is less than threshold, next event
       if(highSiE < si_threshold) continue;
       goodSi++;
+      
+      if(highSiEDet==2 && highSiEQuad ==1) h_all_si->Fill(highSiE);
 
       //Add proton information to tree
       measured_energy = highSiE;
@@ -160,6 +165,7 @@ void EnergyAngle::Loop()
 
       if(!goodRearPosition) {
 	noPosition++;
+	if(highSiEDet==2 && highSiEQuad ==1) h_no_pos->Fill(highSiE);      
 	continue;
       }
 
@@ -210,6 +216,9 @@ void EnergyAngle::Loop()
 
    for(Int_t i = 0;i<8;i++) dE_E[i]->Write();
    outTree->Write();
+   h_no_pos->Write();
+   h_all_si->Write();
+
    file->Close();
 
    printf("Total Events: %d Below PC Threshold: %d No Position: %d No CM Energy %d\n",goodSi,numBelowPCThreshold,noPosition,noCMEnergy);   
@@ -218,7 +227,8 @@ void EnergyAngle::Loop()
 void EnergyAngle::MatchPC(UChar_t wire, Float_t& left_ch,Float_t& right_ch) {
   Float_t left = left_ch-wire_offset[wire].first;
   Float_t right = right_ch-wire_offset[wire].second;
-  right *= wire_gain_diff[wire];
+  left *= wire_gain_diff[wire].first;
+  right *= wire_gain_diff[wire].second;
 
   left_ch = left;
   right_ch = right;
@@ -382,7 +392,7 @@ Float_t EnergyAngle::beam_energy;
 Float_t EnergyAngle::pressure;  
 Float_t EnergyAngle::temperature;      
 std::map<int,std::pair<float,float> > EnergyAngle::wire_offset;
-std::map<int,float> EnergyAngle::wire_gain_diff;
+std::map<int,std::pair<float,float> > EnergyAngle::wire_gain_diff;
 std::map<int,std::pair<float,float> > EnergyAngle::wire_pos_cal;
 EnergyLoss* EnergyAngle::carbon;
 EnergyLoss* EnergyAngle::proton;

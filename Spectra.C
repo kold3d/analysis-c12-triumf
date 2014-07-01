@@ -69,6 +69,7 @@ void Spectra::Loop(Int_t incoming)
   s6->GetYaxis()->SetTitle("Yield [arb. units]");
   s6->GetYaxis()->SetTitleOffset(1.6);
 
+  TH1F* h_no_pro = new TH1F("h_no_pro","h_no_pro",400,0,12000);
   
    Long64_t nentries = fChain->GetEntriesFast();
 
@@ -80,7 +81,10 @@ void Spectra::Loop(Int_t incoming)
       // if (Cut(ientry) < 0) continue;
 
       if(cm_energy[0] == 0.) continue;
-      if(!proton_cut->IsInside(measured_energy,sum_dE[0])) continue;
+      if(!proton_cut->IsInside(measured_energy,sum_dE[0])) {
+	h_no_pro->Fill(measured_energy);
+	continue;
+      }
 
       std::pair<Float_t,Float_t> pc_bound = LookupPCBound(1,cm_energy[0]);
       if(detector == 2 && 
@@ -147,6 +151,15 @@ void Spectra::Loop(Int_t incoming)
    s4->Scale(1./incoming);
    s5->Scale(1./incoming);
    s6->Scale(1./incoming);
+
+   TFile* spec_file = new TFile("spectra.root","recreate");
+   s1->Write();
+   s2->Write();
+   s3->Write();
+   s4->Write();
+   s5->Write();
+   s6->Write();
+   spec_file->Close();
 }
 
 void Spectra::DivideTargetThickness(TH1F *f){    
@@ -186,7 +199,7 @@ void Spectra::EstimateSolidAngleNorm(TH1F* f, Int_t region) {
     else if(region == 4) x = 54.71;
     else if(region == 5) x = 67.21;
     else if(region == 6) x = 79.71;
-    Double_t r2 = x*x+(484.5-delta_x)*(484.5-delta_x);
+    Double_t r2 = x*x+(513.-delta_x)*(513.-delta_x);
     binContent *= r2;
     binError *= r2;
     f->SetBinContent(i,binContent);
@@ -202,8 +215,8 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
   Int_t i_size = f->GetSize();
   TAxis *xaxis = f->GetXaxis();
   for(Int_t i=1;i<i_size-1;i++){
-    TH1F* h = new TH1F(Form("bin_%d_lab_ik",i+1),Form("bin_%d_lab_ik",i+1),180,0,180);
-    TH1F* h2 = new TH1F(Form("bin_%d_cm_fk",i+1),Form("bin_%d_cm_fk",i+1),180,0,180);
+    TH1F* h = new TH1F(Form("bin_%d_lab_ik",i+1),Form("bin_%d_lab_ik",i+1),360,0,180);
+    TH1F* h2 = new TH1F(Form("bin_%d_cm_fk",i+1),Form("bin_%d_cm_fk",i+1),360,0,180);
     printf("Calculating solid angle for Region %d, Bin %d\n",region,i);
 
     Double_t binCenter = xaxis->GetBinCenter(i);
@@ -222,7 +235,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	  std::pair<Float_t,Float_t> pc_bound = LookupPCBound(1,binCenter*m2/(m1+m2));
 	  //printf("%f %f %f %f\n", dx, dy, z, pc.second);
 	  if((pc.first == 2 || pc.first ==3 || pc.first ==4) && fabs(pc.second) < pc_bound.second) {
-	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);
 	    h2->Fill(180-2.*angle);
@@ -236,7 +249,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	  std::pair<Float_t,Float_t> pc_bound = LookupPCBound(2,binCenter*m2/(m1+m2));
 	  if(pc.first == 1  || pc.first == 5 || 
 	     ((pc.first == 2  || pc.first == 3 || pc.first == 4) && fabs(pc.second) > pc_bound.first)) {
-	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);
 	    h2->Fill(180-2.*angle);
@@ -249,7 +262,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
 	  std::pair<Float_t,Float_t> pc_bound = LookupPCBound(3,binCenter*m2/(m1+m2));
 	  if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) {
-	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);	  	    
 	    h2->Fill(180-2.*angle);
@@ -263,7 +276,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
 	  std::pair<Float_t,Float_t> pc_bound = LookupPCBound(4,binCenter*m2/(m1+m2));
 	  if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) {
-	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle); 
 	    h2->Fill(180-2.*angle); 	    
@@ -277,7 +290,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
 	  std::pair<Float_t,Float_t> pc_bound = LookupPCBound(5,binCenter*m2/(m1+m2));
 	  if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) {
-	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);
 	    h2->Fill(180-2.*angle);
@@ -291,7 +304,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
 	  std::pair<Float_t,Float_t> pc_bound = LookupPCBound(6,binCenter*m2/(m1+m2));
 	  if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) {
-	    sum+=elementSize*elementSize/(dx*dx+dy*dy+z*z);	  	    
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);	  	    
 	    h2->Fill(180-2.*angle);

@@ -83,7 +83,7 @@ public :
    static Float_t temperature;      
 
    static std::map<int,std::pair<float,float> > wire_offset;
-   static std::map<int,float> wire_gain_diff;
+   static std::map<int,std::pair<float,float> > wire_gain_diff;
    static std::map<int,std::pair<float,float> > wire_pos_cal;
    
    static LookupTable table;
