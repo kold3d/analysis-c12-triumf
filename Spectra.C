@@ -232,6 +232,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -25.;dx<25.;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  if(pc.first == 1) continue;
 	  std::pair<Float_t,Float_t> pc_bound = LookupPCBound(1,binCenter*m2/(m1+m2));
 	  //printf("%f %f %f %f\n", dx, dy, z, pc.second);
 	  if((pc.first == 2 || pc.first ==3 || pc.first ==4) && fabs(pc.second) < pc_bound.second) {
@@ -246,6 +247,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -25.;dx<25.;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  if(pc.first == 1) continue;
 	  std::pair<Float_t,Float_t> pc_bound = LookupPCBound(2,binCenter*m2/(m1+m2));
 	  if(pc.first == 1  || pc.first == 5 || 
 	     ((pc.first == 2  || pc.first == 3 || pc.first == 4) && fabs(pc.second) > pc_bound.first)) {
@@ -260,6 +262,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  if(pc.first == 1) continue;
 	  std::pair<Float_t,Float_t> pc_bound = LookupPCBound(3,binCenter*m2/(m1+m2));
 	  if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) {
 	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
@@ -274,6 +277,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  if(pc.first == 1) continue;
 	  std::pair<Float_t,Float_t> pc_bound = LookupPCBound(4,binCenter*m2/(m1+m2));
 	  if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) {
 	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
@@ -288,6 +292,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  if(pc.first == 1) continue;
 	  std::pair<Float_t,Float_t> pc_bound = LookupPCBound(5,binCenter*m2/(m1+m2));
 	  if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) {
 	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
@@ -302,6 +307,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  std::pair<Int_t,Float_t> pc = CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,binCenter);
+	  if(pc.first == 1) continue;
 	  std::pair<Float_t,Float_t> pc_bound = LookupPCBound(6,binCenter*m2/(m1+m2));
 	  if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) {
 	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
