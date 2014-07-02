@@ -382,6 +382,7 @@ void EnergyAngle::CalcLookupTable() {
       }
     }
   }
+  fflush(out);
   fclose(out);
   
 }
