@@ -45,7 +45,7 @@ int main(int argc, const char** argv) {
     if(spec->GetBinContent(i) == 0.) continue;
     TH1F* dist = (TH1F*) dist_file->Get(Form("bin_%d_cm_fk",i));
     if(!dist) continue;
-    std::cout << "Calculating bin " << i <<  std::endl;
+    std::cout << "Calculating R-Matrix For Bin " << i << " of " << argv[2] << std::endl;
     double sumNum = 0.;
     double sumDenom = 0.;
     double energy = spec->GetBinCenter(i);
