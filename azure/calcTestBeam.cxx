@@ -36,15 +36,14 @@ int main(int argc, const char** argv) {
 
   TFile* spec_file = new TFile(argv[1],"update");
   TH1F* spec = (TH1F*) spec_file->Get(argv[2]);
-  TFile* dist_file = TFile::Open(argv[3]);
-  
   TH1F* r_matrix = (TH1F*) spec->Clone(Form("%s_r_matrix",spec->GetName()));
   r_matrix->Reset();
+  TFile* dist_file = new TFile(argv[3],"read");
   
   double sigma = 0.05;
   for(int i = 1; i <= spec->GetNbinsX() ; i++) {
     if(spec->GetBinContent(i) == 0.) continue;
-    TH1F* dist = (TH1F*) dist_file->Get(Form("bin_%d_cm_fk"));
+    TH1F* dist = (TH1F*) dist_file->Get(Form("bin_%d_cm_fk",i));
     if(!dist) continue;
     std::cout << "Calculating bin " << i <<  std::endl;
     double sumNum = 0.;

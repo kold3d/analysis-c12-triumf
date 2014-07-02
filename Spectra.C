@@ -27,7 +27,7 @@ void Spectra::InitParameters() {
   carbon = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
 }
 
-void Spectra::Loop(Int_t incoming)
+void Spectra::Loop(Int_t incoming, Bool_t draw)
 {
    if (fChain == 0) return;
 
@@ -118,32 +118,32 @@ void Spectra::Loop(Int_t incoming)
 	s6->Fill(cm_energy[0]);
    }
    
-   TCanvas* c1 = new TCanvas();
+   if(draw) TCanvas* c1 = new TCanvas();
    c1->Divide(3,2);
    c1->cd(1);
    DivideTargetThickness(s1);
-   CalcSolidAngleFast(s1,1);
-   s1->Draw();
+   CalcSolidAngleNorm(s1,1);
+   if(draw) s1->Draw();
    c1->cd(2);
    DivideTargetThickness(s2);
-   CalcSolidAngleFast(s2,2);
-   s2->Draw();
+   CalcSolidAngleNorm(s2,2);
+   if(draw) s2->Draw();
    c1->cd(3);
    DivideTargetThickness(s3);
-   CalcSolidAngleFast(s3,3);
-   s3->Draw();
+   CalcSolidAngleNorm(s3,3);
+   if(draw) s3->Draw();
    c1->cd(4);
    DivideTargetThickness(s4);
-   CalcSolidAngleFast(s4,4);
-   s4->Draw();
+   CalcSolidAngleNorm(s4,4);
+   if(draw) s4->Draw();
    c1->cd(5);
    DivideTargetThickness(s5);
-   CalcSolidAngleFast(s5,5);
-   s5->Draw();
+   CalcSolidAngleNorm(s5,5);
+   if(draw) s5->Draw();
    c1->cd(6);
    DivideTargetThickness(s6);
-   CalcSolidAngleFast(s6,6);
-   s6->Draw();
+   CalcSolidAngleNorm(s6,6);
+   if(draw) s6->Draw();
    
    s1->Scale(1./incoming);
    s2->Scale(1./incoming);
@@ -326,7 +326,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       f->SetBinError(i,0.);
     } else {
       Float_t change_bin_content = 4.*sum*cos(h->GetMean()*3.14159/180);
-      printf("Region: %d CM Energy: %f Solid Angle: %f, change_bin_content:%f\n",region,binCenter*m2/(m1+m2),sum,change_bin_content);
+      //printf("Region: %d CM Energy: %f Solid Angle: %f, change_bin_content:%f\n",region,binCenter*m2/(m1+m2),sum,change_bin_content);
       binContent /= 4.*sum*cos(h->GetMean()*3.14159/180);
       binError /= 4.*sum*cos(h->GetMean()*3.14159/180);
       f->SetBinContent(i,binContent);
