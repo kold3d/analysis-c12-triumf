@@ -25,6 +25,13 @@ typedef struct PCBoundEntry {
 } PCBoundEntry;
 typedef std::map<int,std::vector<PCBoundEntry> > PCBoundTable;
 
+typedef struct SolidAngleEntry {
+  Float_t cmEnergy;
+  Float_t solidangle;
+  Float_t change_bin_content;
+} SolidAngleEntry;
+typedef std::map<int,std::vector<SolidAngleEntry> > SolidAngleTable;
+
 typedef struct Vect3d {
   Float_t x;
   Float_t y;
@@ -103,6 +110,9 @@ public :
    static void      CalcPCBoundTable();
    static void      ReadPCBoundTable();
    static std::pair<Float_t,Float_t> LookupPCBound(Int_t,Float_t);
+   static void      CalcSolidAngleTable();
+   static void      ReadSolidAngleTable();
+   static Float_t   LookupSolidAngle(Int_t,Float_t);
 
  private:
    static Float_t pressure;
@@ -118,10 +128,12 @@ public :
    void DivideTargetThickness(TH1F*);
    void EstimateSolidAngleNorm(TH1F*,Int_t);
    void CalcSolidAngleNorm(TH1F*,Int_t);
+   void CalcSolidAngleFast(TH1F*,Int_t);
    std::pair<Int_t,Float_t> CalcPCCell(Float_t,Float_t,Float_t,Float_t);
    std::pair<Float_t,Float_t> CalcPCBoundary(Int_t,Float_t);
 
    static PCBoundTable pctable;
+   static SolidAngleTable satable;
 };
 
 #endif

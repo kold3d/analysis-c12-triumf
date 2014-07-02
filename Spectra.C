@@ -122,27 +122,27 @@ void Spectra::Loop(Int_t incoming)
    c1->Divide(3,2);
    c1->cd(1);
    DivideTargetThickness(s1);
-   CalcSolidAngleNorm(s1,1);
+   CalcSolidAngleFast(s1,1);
    s1->Draw();
    c1->cd(2);
    DivideTargetThickness(s2);
-   CalcSolidAngleNorm(s2,2);
+   CalcSolidAngleFast(s2,2);
    s2->Draw();
    c1->cd(3);
    DivideTargetThickness(s3);
-   CalcSolidAngleNorm(s3,3);
+   CalcSolidAngleFast(s3,3);
    s3->Draw();
    c1->cd(4);
    DivideTargetThickness(s4);
-   CalcSolidAngleNorm(s4,4);
+   CalcSolidAngleFast(s4,4);
    s4->Draw();
    c1->cd(5);
    DivideTargetThickness(s5);
-   CalcSolidAngleNorm(s5,5);
+   CalcSolidAngleFast(s5,5);
    s5->Draw();
    c1->cd(6);
    DivideTargetThickness(s6);
-   CalcSolidAngleNorm(s6,6);
+   CalcSolidAngleFast(s6,6);
    s6->Draw();
    
    s1->Scale(1./incoming);
@@ -319,6 +319,8 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       f->SetBinContent(i,0.);
       f->SetBinError(i,0.);
     } else {
+      Float_t change_bin_content = 4.*sum*cos(h->GetMean()*3.14159/180);
+      printf("Region: %d CM Energy: %f Solid Angle: %f, change_bin_content:%f\n",region,binCenter*m2/(m1+m2),sum,change_bin_content);
       binContent /= 4.*sum*cos(h->GetMean()*3.14159/180);
       binError /= 4.*sum*cos(h->GetMean()*3.14159/180);
       f->SetBinContent(i,binContent);
@@ -326,6 +328,35 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
     }
     h->Write();
     h2->Write();
+  }
+  file->Close();
+}
+
+void Spectra::CalcSolidAngleFast(TH1F* f, Int_t region) {
+  TFile* file = new TFile(Form("angle_dists/region_%d.root",region),"recreate");
+       
+  Int_t i_size = f->GetSize();
+  TAxis *xaxis = f->GetXaxis();
+  for(Int_t i=1;i<i_size-1;i++){
+    printf("Calculating solid angle for Region %d, Bin %d\n",region,i);
+
+    Double_t binCenter = xaxis->GetBinCenter(i);
+    Double_t binContent = f->GetBinContent(i);
+    if(binContent == 0.) continue;
+    Double_t binError = f->GetBinError(i);
+    
+    Double_t change_bin_content = LookupSolidAngle(region,binCenter); 
+
+    if(change_bin_content == 0.) {
+      printf("Solid angle was zero!\n");
+      f->SetBinContent(i,0.);
+      f->SetBinError(i,0.);
+    } else {
+      binContent /= change_bin_content;
+      binError /= change_bin_content;
+      f->SetBinContent(i,binContent);
+      f->SetBinError(i,binError);
+    }
   }
   file->Close();
 }
@@ -530,6 +561,178 @@ void Spectra::CalcPCBoundTable(){
   fclose(out);
 }
 
+Float_t Spectra::LookupSolidAngle(Int_t region,Float_t cmEnergy){
+  cmEnergy = floor(cmEnergy*100.0+0.5)/100.0; 
+  if(region > 6 || region < 1){
+    printf("Region=%d out of Range\n",region);
+    return 0.;
+  }
+
+  Int_t mappedRegion = region;
+  std::vector<SolidAngleEntry> vec = satable[mappedRegion];
+  Int_t size = vec.size();
+
+  Int_t start = floor(size/2);
+  Int_t direction = 0;
+  if(vec[start].cmEnergy > cmEnergy) direction = -1;
+  else if(vec[start].cmEnergy < cmEnergy) direction = 1;
+  else return vec[start].change_bin_content;
+
+  Bool_t done = false;
+  Float_t previouscontent = vec[start].change_bin_content;
+  Float_t previousCMEnergy = vec[start].cmEnergy;
+
+  Float_t foundcontent = 0.0;
+
+  Int_t i = start+direction;
+  while(!done && i>0 && i<size){
+    Float_t thiscontent = vec[i].change_bin_content;
+    Float_t thisCMEnergy = vec[i].cmEnergy;
+
+    if((direction < 0 && thisCMEnergy <= cmEnergy) || 
+      (direction > 0 && thisCMEnergy >= cmEnergy)){
+      Float_t content_slope = (thiscontent-previouscontent)/(thisCMEnergy-previousCMEnergy);
+      Float_t content_intercept = thiscontent-thisCMEnergy*content_slope;
+      foundcontent = content_slope*cmEnergy+content_intercept;
+      done = true;
+    } else{
+      previouscontent = thiscontent;
+      previousCMEnergy = thisCMEnergy;
+      i += direction;
+    }
+
+  }
+
+  if(!done){
+    printf("Region = %d CM Energy = %f Not found in boundary table!\n",region,cmEnergy);
+  }
+
+  return foundcontent;
+}
+
+void Spectra::ReadSolidAngleTable(){
+  satable.clear();
+  std::ifstream in("solid_angle_table.out");
+  std::string line;
+  while(!in.eof()){
+    getline(in,line);
+    if(!in.eof()){
+      std::istringstream stm;
+      stm.str(line);
+      Int_t region;
+      Float_t cmEnergy,solidangle,change_bin_content;
+      stm >> region >> cmEnergy >> solidangle >> change_bin_content;
+      SolidAngleEntry entry = {cmEnergy,solidangle,change_bin_content};
+      satable[region].push_back(entry);
+    }
+  }
+}
+
+void Spectra::CalcSolidAngleTable(){
+	InitParameters();
+	Spectra sp;
+	//satable.clear();
+	FILE* out = fopen("solid_angle_table.out","w");
+	Float_t elementSize = 1.;
+	for(Int_t region = 1; region <= 6; region++){
+		for(Double_t cmEnergy = 0.00; cmEnergy <= 5.0; cmEnergy+=0.1){
+      TH1F* h = new TH1F(Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),360,0,180);
+      TH1F* h2 = new TH1F(Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),360,0,180);
+			Double_t depth = carbon->CalcRange(beam_energy,cmEnergy*(m1+m2)/m2);
+		  Double_t z = 513.-depth;
+		    
+		  Float_t sum = 0.;
+		  if(region == 1) {
+        std::pair<Float_t,Float_t> pc_bound = sp.LookupPCBound(1,cmEnergy);
+		  	for(Float_t dx = -25.;dx<25.;dx+=elementSize) {
+			   	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+			  		std::pair<Int_t,Float_t> pc = sp.CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,cmEnergy*(m1+m2)/m2);
+						if((pc.first == 2 || pc.first ==3 || pc.first ==4) && fabs(pc.second) < pc_bound.second) {
+              sum+=elementSize*elementSize*z/pow((dx*dx+dy*dy+z*z),1.5);
+              Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+              h->Fill(angle);         
+              h2->Fill(180-2.*angle);
+			  		}
+					}
+		    	}
+		    } else if(region == 2) {
+          std::pair<Float_t,Float_t> pc_bound = sp.LookupPCBound(2,cmEnergy);
+		      for(Float_t dx = -25.;dx<25.;dx+=elementSize) {
+					 for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+			  		std::pair<Int_t,Float_t> pc = sp.CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,cmEnergy*(m1+m2)/m2);
+			  		if(pc.first == 1  || pc.first == 5 || 
+			     		((pc.first == 2  || pc.first == 3 || pc.first == 4) && fabs(pc.second) > pc_bound.first)) {
+              sum+=elementSize*elementSize*z/pow((dx*dx+dy*dy+z*z),1.5);
+              Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+              h->Fill(angle);         
+              h2->Fill(180-2.*angle);
+			  		}
+					}
+		      	}
+		    } else if(region == 3) {
+          std::pair<Float_t,Float_t> pc_bound = sp.LookupPCBound(3,cmEnergy);
+		      for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
+					 for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+			  			std::pair<Int_t,Float_t> pc = sp.CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,cmEnergy*(m1+m2)/m2);
+			  			if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) {
+              sum+=elementSize*elementSize*z/pow((dx*dx+dy*dy+z*z),1.5);
+              Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+              h->Fill(angle);         
+              h2->Fill(180-2.*angle);
+			  			}
+						}
+		      }
+		      sum*=2.;
+		    } else if(region == 4) {
+          std::pair<Float_t,Float_t> pc_bound = sp.LookupPCBound(4,cmEnergy);
+		      for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
+					 for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+			  			std::pair<Int_t,Float_t> pc = sp.CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,cmEnergy*(m1+m2)/m2);
+			  			if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) {
+			    		sum+=elementSize*elementSize*z/pow((dx*dx+dy*dy+z*z),1.5);
+              Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+              h->Fill(angle);         
+              h2->Fill(180-2.*angle);	    
+		 	  			}
+		        }	
+		      }
+		      sum*=2.;
+		    } else if(region == 5) {
+          std::pair<Float_t,Float_t> pc_bound = sp.LookupPCBound(5,cmEnergy);
+		      for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
+					 for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+			  		std::pair<Int_t,Float_t> pc = sp.CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,cmEnergy*(m1+m2)/m2);
+			  		if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) {
+              sum+=elementSize*elementSize*z/pow((dx*dx+dy*dy+z*z),1.5);
+              Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+              h->Fill(angle);         
+              h2->Fill(180-2.*angle);
+			  		}
+					 }
+		      }
+		      sum*=2.;
+		    } else if(region == 6) {
+          std::pair<Float_t,Float_t> pc_bound = sp.LookupPCBound(6,cmEnergy);
+		      for(Float_t dx = -85.96; dx < -35.96; dx+=elementSize) {
+					 for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+			  		std::pair<Int_t,Float_t> pc = sp.CalcPCCell(dx+elementSize/2.,dy+elementSize/2.,depth,cmEnergy*(m1+m2)/m2);
+			  		if(fabs(pc.second) > pc_bound.first && fabs(pc.second) < pc_bound.second) {
+              sum+=elementSize*elementSize*z/pow((dx*dx+dy*dy+z*z),1.5);
+              Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+              h->Fill(angle);         
+              h2->Fill(180-2.*angle);
+			  		}
+				    }
+		        }
+		      sum*=2.;
+		     }
+         Float_t change_bin_content = 4.*sum*cos(h->GetMean()*3.14159/180);
+		     printf("Region: %d, CM Energy: %f, SolidAngle: %f, change_bin_content:%f\n",region, cmEnergy,sum,change_bin_content);
+      		fprintf(out, "%d %f %f %f\n",region, cmEnergy,sum,change_bin_content);
+		}
+	}
+}
+
 Float_t Spectra::pressure;
 Float_t Spectra::temperature;
 EnergyLoss* Spectra::proton;
@@ -539,3 +742,4 @@ Float_t Spectra::m1;
 Float_t Spectra::m2;
 Float_t Spectra::beam_energy;
 PCBoundTable Spectra::pctable;
+SolidAngleTable Spectra::satable;
