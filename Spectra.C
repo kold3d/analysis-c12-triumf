@@ -117,9 +117,10 @@ void Spectra::Loop(Int_t incoming, Bool_t draw)
 	 fabs(position[0]) > pc_bound.first && fabs(position[0]) < pc_bound.second) 
 	s6->Fill(cm_energy[0]);
    }
-   
+
+   TCanvas* c1;
    if(draw) {
-     TCanvas* c1 = new TCanvas();
+     c1 = new TCanvas();
      c1->Divide(3,2);
      c1->cd(1);
    }
