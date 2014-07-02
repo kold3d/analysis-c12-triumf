@@ -1,0 +1,1 @@
+/usr/local/bin/g++ `root-config --cflags` -fopenmp -o calcTestBeam calcTestBeam.cxx -lAZURE2 -lcoul -lgsl -lgslcblas -lMinuit2 `root-config --libs`
