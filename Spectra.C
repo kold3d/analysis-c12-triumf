@@ -118,29 +118,41 @@ void Spectra::Loop(Int_t incoming, Bool_t draw)
 	s6->Fill(cm_energy[0]);
    }
    
-   if(draw) TCanvas* c1 = new TCanvas();
-   c1->Divide(3,2);
-   c1->cd(1);
+   if(draw) {
+     TCanvas* c1 = new TCanvas();
+     c1->Divide(3,2);
+     c1->cd(1);
+   }
    DivideTargetThickness(s1);
    CalcSolidAngleNorm(s1,1);
-   if(draw) s1->Draw();
-   c1->cd(2);
+   if(draw) {
+     s1->Draw();
+     c1->cd(2); 
+   }
    DivideTargetThickness(s2);
    CalcSolidAngleNorm(s2,2);
-   if(draw) s2->Draw();
-   c1->cd(3);
+   if(draw) {
+     s2->Draw();
+     c1->cd(3);
+   }
    DivideTargetThickness(s3);
    CalcSolidAngleNorm(s3,3);
-   if(draw) s3->Draw();
-   c1->cd(4);
+   if(draw) {
+     s3->Draw();
+     c1->cd(4);
+   }
    DivideTargetThickness(s4);
    CalcSolidAngleNorm(s4,4);
-   if(draw) s4->Draw();
-   c1->cd(5);
+   if(draw) {
+     s4->Draw();
+     c1->cd(5);
+   }
    DivideTargetThickness(s5);
    CalcSolidAngleNorm(s5,5);
-   if(draw) s5->Draw();
-   c1->cd(6);
+   if(draw) {
+     s5->Draw();
+     c1->cd(6);
+   }
    DivideTargetThickness(s6);
    CalcSolidAngleNorm(s6,6);
    if(draw) s6->Draw();
