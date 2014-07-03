@@ -333,7 +333,7 @@ void EnergyAngle::CalcLookupTable() {
     -20.32,
     -10.16,
     0.0,
-    10.16l,
+    10.16,
     20.32,
     -15.24,
     0.00,

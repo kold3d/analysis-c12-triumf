@@ -27,7 +27,7 @@ void Spectra::InitParameters() {
   carbon = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
 }
 
-void Spectra::Loop(Int_t incoming, Bool_t draw)
+void Spectra::Loop(Int_t incoming, Bool_t draw, Bool_t exact)
 {
    if (fChain == 0) return;
 
@@ -125,37 +125,43 @@ void Spectra::Loop(Int_t incoming, Bool_t draw)
      c1->cd(1);
    }
    DivideTargetThickness(s1);
-   CalcSolidAngleNorm(s1,1);
+   if(!exact) CalcSolidAngleFast(s1,1);
+   else CalcSolidAngleNorm(s1,1);
    if(draw) {
      s1->Draw();
      c1->cd(2); 
    }
    DivideTargetThickness(s2);
-   CalcSolidAngleNorm(s2,2);
+   if(!exact) CalcSolidAngleFast(s2,2);
+   else CalcSolidAngleNorm(s2,2);
    if(draw) {
      s2->Draw();
      c1->cd(3);
    }
    DivideTargetThickness(s3);
-   CalcSolidAngleNorm(s3,3);
+   if(!exact) CalcSolidAngleFast(s3,3);
+   else CalcSolidAngleNorm(s3,3);
    if(draw) {
      s3->Draw();
      c1->cd(4);
    }
    DivideTargetThickness(s4);
-   CalcSolidAngleNorm(s4,4);
+   if(!exact) CalcSolidAngleFast(s4,4);
+   else CalcSolidAngleNorm(s4,4);
    if(draw) {
      s4->Draw();
      c1->cd(5);
    }
    DivideTargetThickness(s5);
-   CalcSolidAngleNorm(s5,5);
+   if(!exact) CalcSolidAngleFast(s5,5);
+   else CalcSolidAngleNorm(s5,5);
    if(draw) {
      s5->Draw();
      c1->cd(6);
    }
    DivideTargetThickness(s6);
-   CalcSolidAngleNorm(s6,6);
+   if(!exact) CalcSolidAngleFast(s6,6);
+   else CalcSolidAngleNorm(s6,6);
    if(draw) s6->Draw();
    
    s1->Scale(1./incoming);
@@ -339,7 +345,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       f->SetBinError(i,0.);
     } else {
       Float_t change_bin_content = 4.*sum*cos(h->GetMean()*3.14159/180);
-      //printf("Region: %d CM Energy: %f Solid Angle: %f, change_bin_content:%f\n",region,binCenter*m2/(m1+m2),sum,change_bin_content);
+      printf("Region: %d CM Energy: %f Solid Angle: %f, change_bin_content:%f\n",region,binCenter*m2/(m1+m2),sum,change_bin_content);
       binContent /= 4.*sum*cos(h->GetMean()*3.14159/180);
       binError /= 4.*sum*cos(h->GetMean()*3.14159/180);
       f->SetBinContent(i,binContent);
@@ -352,8 +358,6 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 }
 
 void Spectra::CalcSolidAngleFast(TH1F* f, Int_t region) {
-  TFile* file = new TFile(Form("angle_dists/region_%d.root",region),"recreate");
-       
   Int_t i_size = f->GetSize();
   TAxis *xaxis = f->GetXaxis();
   for(Int_t i=1;i<i_size-1;i++){
@@ -377,7 +381,6 @@ void Spectra::CalcSolidAngleFast(TH1F* f, Int_t region) {
       f->SetBinError(i,binError);
     }
   }
-  file->Close();
 }
 
 std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t depth, Float_t carbonEnergy) {		    
@@ -465,7 +468,7 @@ std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t dep
 std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t region, Float_t cmEnergy){
 	cmEnergy *= (m1+m2)/m2;
 
-	Double_t depth_bound = carbon->CalcRange(79.76,cmEnergy);
+	Double_t depth_bound = carbon->CalcRange(beam_energy,cmEnergy);
 	Double_t z_bound = 513.-depth_bound;
 	//Double_t dist_first_wire = 29.7;
 	Double_t dist_second_wire = z_bound-28.5;

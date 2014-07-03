@@ -1,5 +1,4 @@
 cd azure
-source /opt/root_g++/bin/thisroot.sh
 ./calcTestBeam ../spectra.root s1 ../angle_dists/region_1.root
 ./calcTestBeam ../spectra.root s2 ../angle_dists/region_2.root
 ./calcTestBeam ../spectra.root s3 ../angle_dists/region_3.root

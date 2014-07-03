@@ -14,7 +14,7 @@ int main(int argc, const char** argv) {
   //Setup path to config file, read config options, and set parameter file
   configure.configfile = "12C+p.azr";
   configure.ReadConfigFile();
-  configure.paramfile = configure.outputdir+"param.par";
+  configure.paramfile = configure.outputdir+"param.sav";
 
   //Set runtime options
   configure.paramMask |= Config::USE_BRUNE_FORMALISM;
