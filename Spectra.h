@@ -118,7 +118,7 @@ public :
    static Float_t pressure;
    static Float_t temperature;
    static EnergyLoss* proton;
-   static EnergyLoss* carbon;
+   static EnergyLoss* projectile;
    static Float_t density;
    static Float_t m1;
    static Float_t m2;

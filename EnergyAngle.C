@@ -27,7 +27,7 @@ void EnergyAngle::InitParameters() {
   Float_t density = pressure*torrInPa*molarMassMethane/
     gasConstant/temperature*0.001;
 
-  carbon = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
+  projectile = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
   proton = new EnergyLoss("dEdx_proton_methane_290K_400torr.dat",density*100.);
 
 
@@ -356,7 +356,7 @@ void EnergyAngle::CalcLookupTable() {
     
     for(Float_t x=0.;x<=80.;x+=0.5) {
       for(Float_t E = beam_energy;E>0.;E-=deltaBeamE) {
-	double range = carbon->CalcRange(beam_energy,E);
+	double range = projectile->CalcRange(beam_energy,E);
 	double pointToWire = (wire<5) ? distanceToSecondWire-range :
 	  distanceToFirstWire-range;
 	double distance0 = sqrt(pointToWire*pointToWire+x*x);
@@ -395,7 +395,7 @@ Float_t EnergyAngle::temperature;
 std::map<int,std::pair<float,float> > EnergyAngle::wire_offset;
 std::map<int,std::pair<float,float> > EnergyAngle::wire_gain_diff;
 std::map<int,std::pair<float,float> > EnergyAngle::wire_pos_cal;
-EnergyLoss* EnergyAngle::carbon;
+EnergyLoss* EnergyAngle::projectile;
 EnergyLoss* EnergyAngle::proton;
 Float_t EnergyAngle::m1;
 Float_t EnergyAngle::m2;

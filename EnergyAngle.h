@@ -88,7 +88,7 @@ public :
    
    static LookupTable table;
 
-   static EnergyLoss* carbon;
+   static EnergyLoss* projectile;
    static EnergyLoss* proton;
 
    static Float_t m1;

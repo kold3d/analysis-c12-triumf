@@ -24,7 +24,7 @@ void Spectra::InitParameters() {
     gasConstant/temperature*0.001;
  
   proton = new EnergyLoss("dEdx_proton_methane_290K_400torr.dat",density*100.);
-  carbon = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
+  projectile = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
 }
 
 void Spectra::Loop(Int_t incoming, Bool_t draw, Bool_t exact)
@@ -191,7 +191,7 @@ void Spectra::DivideTargetThickness(TH1F *f){
     binUpEdge *= (m1+m2)/m2; // From C.M. to Lab Frame
     Double_t binContent = f->GetBinContent(i);
     Double_t binError = f->GetBinError(i);
-    Double_t delta_x = carbon->CalcRange(binUpEdge,binLowEdge);
+    Double_t delta_x = projectile->CalcRange(binUpEdge,binLowEdge);
     delta_x /= 10.0;
     Float_t molarMassMethane = 0.01604;
     Double_t factor = 4.e-27*density*delta_x*TMath::Na()/molarMassMethane;
@@ -210,7 +210,7 @@ void Spectra::EstimateSolidAngleNorm(TH1F* f, Int_t region) {
     binCenter *= (m1+m2)/m2;
     Double_t binContent = f->GetBinContent(i);
     Double_t binError = f->GetBinError(i);
-    Double_t delta_x = carbon->CalcRange(beam_energy,binCenter);
+    Double_t delta_x = projectile->CalcRange(beam_energy,binCenter);
     Double_t x=0.;
     if(region == 1) x = 0;
     else if(region == 2) x = 17.5;
@@ -243,7 +243,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
     Double_t binContent = f->GetBinContent(i);
     if(binContent == 0.) continue;
     Double_t binError = f->GetBinError(i);
-    Double_t depth = carbon->CalcRange(beam_energy,binCenter);
+    Double_t depth = projectile->CalcRange(beam_energy,binCenter);
     Double_t z = 513.-depth;
     
     Float_t sum = 0.;
@@ -383,7 +383,7 @@ void Spectra::CalcSolidAngleFast(TH1F* f, Int_t region) {
   }
 }
 
-std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t depth, Float_t carbonEnergy) {		    
+std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t depth, Float_t projectileEnergy) {		    
   Float_t SiToAnode = 28.5;
   Float_t cellWidth = 10.16;
   Float_t windowToSi = 513.;
@@ -426,7 +426,7 @@ std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t dep
     return std::pair<Int_t,Float_t>(0.,0.);
   }
 
-  Float_t protonInitialEnergy = 4.*m1*m2/(m1+m2)/(m1+m2)*vec.z*vec.z*carbonEnergy;
+  Float_t protonInitialEnergy = 4.*m1*m2/(m1+m2)/(m1+m2)*vec.z*vec.z*projectileEnergy;
   Float_t energyAtPC = proton->CalcRemainder(protonInitialEnergy,Vec3d(chamberPoint,exitPoint).mag);
 
   std::pair<Int_t,Float_t> returnValues;
@@ -468,7 +468,7 @@ std::pair<Int_t,Float_t> Spectra::CalcPCCell(Float_t x1, Float_t y1, Float_t dep
 std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t region, Float_t cmEnergy){
 	cmEnergy *= (m1+m2)/m2;
 
-	Double_t depth_bound = carbon->CalcRange(beam_energy,cmEnergy);
+	Double_t depth_bound = projectile->CalcRange(beam_energy,cmEnergy);
 	Double_t z_bound = 513.-depth_bound;
 	//Double_t dist_first_wire = 29.7;
 	Double_t dist_second_wire = z_bound-28.5;
@@ -660,7 +660,7 @@ void Spectra::CalcSolidAngleTable(){
   for(Int_t region = 1; region <= 6; region++){
     for(Double_t cmEnergy = 0.00; cmEnergy <= 5.0; cmEnergy+=0.1){
       TH1F* h = new TH1F(Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),360,0,180);
-      Double_t depth = carbon->CalcRange(beam_energy,cmEnergy*(m1+m2)/m2);
+      Double_t depth =projectile->CalcRange(beam_energy,cmEnergy*(m1+m2)/m2);
       Double_t z = 513.-depth;
       
       Float_t sum = 0.;
@@ -760,7 +760,7 @@ void Spectra::CalcSolidAngleTable(){
 Float_t Spectra::pressure;
 Float_t Spectra::temperature;
 EnergyLoss* Spectra::proton;
-EnergyLoss* Spectra::carbon;
+EnergyLoss* Spectra::projectile;
 Float_t Spectra::density;
 Float_t Spectra::m1;
 Float_t Spectra::m2;
