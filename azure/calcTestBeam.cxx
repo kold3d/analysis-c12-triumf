@@ -49,7 +49,7 @@ int main(int argc, const char** argv) {
     double sumNum = 0.;
     double sumDenom = 0.;
     double energy = spec->GetBinCenter(i);
-    for(double dE = energy-4.*sigma; dE<=energy+4.*sigma;dE+=8.*sigma/50) {
+    for(double dE = energy-4.*sigma; dE<=energy+4.*sigma;dE+=8.*sigma/20) {
       double sumNum2 = 0.;
       double sumDenom2 = 0.;
       for(int j = 1; j <= dist->GetNbinsX() ; j++) {

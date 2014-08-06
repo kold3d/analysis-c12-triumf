@@ -1,10 +1,10 @@
-void CalcSpectraRMatrix(TTree* tree,Int_t incoming) {
+void CalcSpectraRMatrix(TTree* tree,Float_t incoming) {
   gSystem->CompileMacro("EnergyLoss.C");
   gSystem->CompileMacro("EnergyAngle.C");
   EnergyAngle::ReadLookupTable();
   gSystem->CompileMacro("Spectra.C");
   Spectra::ReadPCBoundTable();
-  //Spectra::ReadSolidAngleTable();
+  Spectra::ReadSolidAngleTable();
 
   EnergyAngle t1(tree);
   t1.Loop();
