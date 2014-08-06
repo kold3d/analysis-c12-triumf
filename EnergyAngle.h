@@ -37,24 +37,30 @@ public :
    UChar_t         si_mul;
    UChar_t         si_det[12];   //[si_mul]
    UChar_t         si_quad[12];   //[si_mul]
-   Int_t           si_ch[12];   //[si_mul]
-   Float_t         si_cal[12];   //[si_mul]
+   Int_t           si_ch_e[12];   //[si_mul]
+   Float_t         si_cal_e[12];   //[si_mul]
+   Int_t           si_ch_t[12];   //[si_mul]
    UChar_t         pc_mul;
    UChar_t         pc_wire[8];   //[pc_mul]
-   Int_t           pc_ch_right[8];   //[pc_mul]
-   Int_t           pc_ch_left[8];   //[pc_mul]
+   Int_t           pc_ch_right_e[8];   //[pc_mul]
+   Int_t           pc_ch_left_e[8];   //[pc_mul]
+   Int_t           pc_ch_right_t[8];   //[pc_mul]
+   Int_t           pc_ch_left_t[8];   //[pc_mul]
    Int_t           ic_ch;
 
    // List of branches
    TBranch        *b_si_mul;   //!
    TBranch        *b_si_det;   //!
    TBranch        *b_si_quad;   //!
-   TBranch        *b_si_ch;   //!
-   TBranch        *b_si_cal;   //!
+   TBranch        *b_si_ch_e;   //!
+   TBranch        *b_si_cal_e;   //!
+   TBranch        *b_si_ch_t;   //!
    TBranch        *b_pc_mul;   //!
    TBranch        *b_pc_wire;   //!
-   TBranch        *b_pc_ch_right;   //!
-   TBranch        *b_pc_ch_left;   //!
+   TBranch        *b_pc_ch_right_e;   //!
+   TBranch        *b_pc_ch_left_e;   //!
+   TBranch        *b_pc_ch_right_t;   //!
+   TBranch        *b_pc_ch_left_t;   //!
    TBranch        *b_ic_ch;   //!
 
    EnergyAngle(TTree *tree=0);
@@ -103,11 +109,11 @@ EnergyAngle::EnergyAngle(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../data/tree/c12_data_run19-25.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../../daq/offline/data/tree/carbon_triumf_09-13_t.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("../data/tree/c12_data_run19-25.root");
+         f = new TFile("../../daq/offline/data/tree/carbon_triumf_09-13_t.root");
       }
-      f->GetObject("c12Data",tree);
+      f->GetObject("rawData",tree);
 
    }
    Init(tree);
@@ -158,12 +164,15 @@ void EnergyAngle::Init(TTree *tree)
    fChain->SetBranchAddress("si_mul", &si_mul, &b_si_mul);
    fChain->SetBranchAddress("si_det", si_det, &b_si_det);
    fChain->SetBranchAddress("si_quad", si_quad, &b_si_quad);
-   fChain->SetBranchAddress("si_ch", si_ch, &b_si_ch);
-   fChain->SetBranchAddress("si_cal", si_cal, &b_si_cal);
+   fChain->SetBranchAddress("si_ch_e", si_ch_e, &b_si_ch_e);
+   fChain->SetBranchAddress("si_cal_e", si_cal_e, &b_si_cal_e);
+   fChain->SetBranchAddress("si_ch_t", si_ch_t, &b_si_ch_t);
    fChain->SetBranchAddress("pc_mul", &pc_mul, &b_pc_mul);
    fChain->SetBranchAddress("pc_wire", pc_wire, &b_pc_wire);
-   fChain->SetBranchAddress("pc_ch_right", pc_ch_right, &b_pc_ch_right);
-   fChain->SetBranchAddress("pc_ch_left", pc_ch_left, &b_pc_ch_left);
+   fChain->SetBranchAddress("pc_ch_right_e", pc_ch_right_e, &b_pc_ch_right_e);
+   fChain->SetBranchAddress("pc_ch_left_e", pc_ch_left_e, &b_pc_ch_left_e);
+   fChain->SetBranchAddress("pc_ch_right_t", pc_ch_right_t, &b_pc_ch_right_t);
+   fChain->SetBranchAddress("pc_ch_left_t", pc_ch_left_t, &b_pc_ch_left_t);
    fChain->SetBranchAddress("ic_ch", &ic_ch, &b_ic_ch);
    Notify();
 }

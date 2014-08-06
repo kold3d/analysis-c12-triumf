@@ -103,7 +103,7 @@ public :
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
-   virtual void     Loop(Int_t,Bool_t draw=true, Bool_t exact=false);
+   virtual void     Loop(Float_t,Bool_t draw=true, Bool_t exact=false);
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 

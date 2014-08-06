@@ -10,9 +10,9 @@
 #include <sstream>
 
 void Spectra::InitParameters() {
-  beam_energy      = 79.76;  //MeV, after havar
-  pressure         = 397.;   //In Torr
-  temperature      = 290.;   //In Kelvin
+  beam_energy      = 41.62;  //MeV, after havar
+  pressure         = 785.;   //In Torr
+  temperature      = 295.;   //In Kelvin
   m1 = 12.;
   m2 =  1.;
 
@@ -20,14 +20,13 @@ void Spectra::InitParameters() {
   Float_t torrInPa = 133.322368;
   Float_t molarMassMethane = 0.01604;
 
-  density = pressure*torrInPa*molarMassMethane/
-    gasConstant/temperature*0.001;
+  density = 0.000622*pressure/760/temperature*293;
  
   proton = new EnergyLoss("dEdx_proton_methane_290K_400torr.dat",density*100.);
   projectile = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
 }
 
-void Spectra::Loop(Int_t incoming, Bool_t draw, Bool_t exact)
+void Spectra::Loop(Float_t incoming, Bool_t draw, Bool_t exact)
 {
    if (fChain == 0) return;
 
@@ -187,6 +186,7 @@ void Spectra::DivideTargetThickness(TH1F *f){
   for(Int_t i=1;i<i_size-1;i++){
     Double_t binLowEdge = xaxis->GetBinLowEdge(i);
     Double_t binUpEdge = xaxis->GetBinUpEdge(i);
+    if(binLowEdge==0.) binLowEdge+=0.001;
     binLowEdge *= (m1+m2)/m2;
     binUpEdge *= (m1+m2)/m2; // From C.M. to Lab Frame
     Double_t binContent = f->GetBinContent(i);
@@ -473,7 +473,7 @@ std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t region, Float_t cmEnerg
 	//Double_t dist_first_wire = 29.7;
 	Double_t dist_second_wire = z_bound-28.5;
 
-	Boundary wire_fixed_values[5];
+	Boundary wire_fixed_values[6];
 	wire_fixed_values[0] = Boundary(0.,10.);
 	wire_fixed_values[1] = Boundary(10.,25.);
 	wire_fixed_values[2] = Boundary(35.96,48.46);
@@ -481,7 +481,7 @@ std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t region, Float_t cmEnerg
 	wire_fixed_values[4] = Boundary(60.96,73.46);
 	wire_fixed_values[5] = Boundary(73.46,85.96);
 
-	Boundary wire_float[5];
+	Boundary wire_float[6];
 	for(Int_t i_wire = 0; i_wire<=5;i_wire++) {
 	  wire_float[i_wire] = Boundary(wire_fixed_values[i_wire].first*dist_second_wire/z_bound,wire_fixed_values[i_wire].second*dist_second_wire/z_bound);
 	}
@@ -568,13 +568,13 @@ void Spectra::ReadPCBoundTable(){
 }
 
 void Spectra::CalcPCBoundTable(){
-  InitParameters();
   Spectra sp;
+  InitParameters();
   pctable.clear();
   FILE* out = fopen("pc_boundary_table.out","w");
   std::pair<Float_t,Float_t> pc_bound;
   for(Int_t region = 1; region <= 6; region++){
-    for(Double_t cmEnergy = 0.0; cmEnergy <= 5.0; cmEnergy+=0.01){
+    for(Double_t cmEnergy = 0.001; cmEnergy <= 5.0; cmEnergy+=0.01){
       pc_bound = sp.CalcPCBoundary(region,cmEnergy);
       printf("Region: %d, CM Energy: %f, Left Boundary: %f, Right Boundary: %f\n",region, cmEnergy,pc_bound.first,pc_bound.second);
       fprintf(out, "%d %f %f %f\n",region, cmEnergy,pc_bound.first,pc_bound.second);
@@ -658,7 +658,7 @@ void Spectra::CalcSolidAngleTable(){
   FILE* out = fopen("solid_angle_table.out","w");
   Float_t elementSize = 1.;
   for(Int_t region = 1; region <= 6; region++){
-    for(Double_t cmEnergy = 0.00; cmEnergy <= 5.0; cmEnergy+=0.1){
+    for(Double_t cmEnergy = 0.001; cmEnergy <= 5.0; cmEnergy+=0.1){
       TH1F* h = new TH1F(Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),360,0,180);
       Double_t depth =projectile->CalcRange(beam_energy,cmEnergy*(m1+m2)/m2);
       Double_t z = 513.-depth;

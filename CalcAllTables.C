@@ -4,5 +4,6 @@
   EnergyAngle::CalcLookupTable();
   gSystem->CompileMacro("Spectra.C");
   Spectra::CalcPCBoundTable();
+  Spectra::ReadPCBoundTable();
   Spectra::CalcSolidAngleTable();
 }

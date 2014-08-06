@@ -1,4 +1,4 @@
-void CalcSpectra(TTree* tree,Int_t incoming) {
+void CalcSpectra(TTree* tree,Float_t incoming) {
   gSystem->CompileMacro("EnergyLoss.C");
   gSystem->CompileMacro("EnergyAngle.C");
   EnergyAngle::ReadLookupTable();

@@ -14,9 +14,9 @@ void EnergyAngle::InitParameters() {
 
   sum_pc_threshold  = 50.;   //In Channels
   si_threshold     = 350.;   //In KeV
-  beam_energy      = 79.76; //In MeV, after window
-  pressure         = 397.;   //In Torr
-  temperature      = 290.;   //In Kelvin
+  beam_energy      = 41.62; //In MeV, after window
+  pressure         = 785.;   //In Torr
+  temperature      = 295.;   //In Kelvin
   m1 = 12.;
   m2 = 1.;
 
@@ -24,8 +24,7 @@ void EnergyAngle::InitParameters() {
   Float_t torrInPa = 133.322368;
   Float_t molarMassMethane = 0.01604;
 
-  Float_t density = pressure*torrInPa*molarMassMethane/
-    gasConstant/temperature*0.001;
+  Float_t density = 0.000622*pressure/760/temperature*293;
 
   projectile = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
   proton = new EnergyLoss("dEdx_proton_methane_290K_400torr.dat",density*100.);
@@ -106,8 +105,8 @@ void EnergyAngle::Loop()
       Int_t highSiEQuad = -1;
       Float_t highSiE = 0;
       for(Int_t i =0;i<si_mul;i++) {
-	if(si_cal[i]>highSiE) {
-	  highSiE = si_cal[i];
+	if(si_cal_e[i]>highSiE) {
+	  highSiE = si_cal_e[i];
 	  highSiEDet = si_det[i];
 	  highSiEQuad = si_quad[i];
 	}
@@ -136,8 +135,8 @@ void EnergyAngle::Loop()
       Bool_t wireAboveThreshold = false;
       for(Int_t i = 0;i<pc_mul;i++) {
 	if(pc_wire[i]==1) continue;
-	Float_t left = pc_ch_left[i];
-	Float_t right = pc_ch_right[i];
+	Float_t left = pc_ch_left_e[i];
+	Float_t right = pc_ch_right_e[i];
 	MatchPC(pc_wire[i]-1,left,right);
 	Float_t sum = left+right;
 	if( sum < sum_pc_threshold ) {
