@@ -12,7 +12,7 @@ LookupTable EnergyAngle::table;
 
 void EnergyAngle::InitParameters() {
 
-  sum_pc_threshold  = 50.;   //In Channels
+  sum_pc_threshold = 0.;   //In Channels
   si_threshold     = 350.;   //In KeV
   beam_energy      = 41.62; //In MeV, after window
   pressure         = 785.;   //In Torr
@@ -29,37 +29,41 @@ void EnergyAngle::InitParameters() {
   projectile = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
   proton = new EnergyLoss("dEdx_proton_methane_290K_400torr.dat",density*100.);
 
-
   
   //Noise peaks
-  wire_offset[0] = std::pair<float,float>(0.0,0.0);
-  wire_offset[1] = std::pair<float,float>(39.6507,38.5129);
-  wire_offset[2] = std::pair<float,float>(39.0006,39.8341);
-  wire_offset[3] = std::pair<float,float>(39.2025,38.8358);
-  wire_offset[4] = std::pair<float,float>(39.7448,41.139);
-  wire_offset[5] = std::pair<float,float>(39.6441,39.1638);
-  wire_offset[6] = std::pair<float,float>(39.9842,40.8464);
-  wire_offset[7] = std::pair<float,float>(39.6582,38.1933);
+  wire_offset[7] = std::pair<float,float>(0.0,0.0);
+  wire_offset[6] = std::pair<float,float>(38.5129,39.6507);
+  wire_offset[5] = std::pair<float,float>(39.8341,39.0006);
+  wire_offset[4] = std::pair<float,float>(38.8358,39.2025);
+  wire_offset[3] = std::pair<float,float>(41.139,39.7448);
+  wire_offset[2] = std::pair<float,float>(39.1638,39.6441);
+  wire_offset[1] = std::pair<float,float>(40.8464,39.9842);
+  wire_offset[0] = std::pair<float,float>(38.1933,39.6582);
 
   //Gain matches from pulser (ratio left to right);
-  wire_gain_diff[0] = std::pair<float,float>(1.00000,1.00636);
-  wire_gain_diff[1] = std::pair<float,float>(1.02192,0.97957);
-  wire_gain_diff[2] = std::pair<float,float>(1.05483,1.00233);
-  wire_gain_diff[3] = std::pair<float,float>(1.02399,1.02017);
-  wire_gain_diff[4] = std::pair<float,float>(0.99870,0.97122);
-  wire_gain_diff[5] = std::pair<float,float>(0.98590,1.02667);
-  wire_gain_diff[6] = std::pair<float,float>(0.95724,0.99821);
-  wire_gain_diff[7] = std::pair<float,float>(1.05401,1.07341);
+  wire_gain_diff[7] = std::pair<float,float>(1.00636,1.00000);
+  wire_gain_diff[6] = std::pair<float,float>(0.97957,1.02192);
+  wire_gain_diff[5] = std::pair<float,float>(1.00233,1.05483);
+  wire_gain_diff[4] = std::pair<float,float>(1.02017,1.02399);
+  wire_gain_diff[3] = std::pair<float,float>(0.97122,0.99870);
+  wire_gain_diff[2] = std::pair<float,float>(1.02667,0.98590);
+  wire_gain_diff[1] = std::pair<float,float>(0.99821,0.95724);
+  wire_gain_diff[0] = std::pair<float,float>(1.0,1.0);
 
    //Position calibration (slope,intercept)
-   wire_pos_cal[0] = std::pair<Float_t,Float_t>( 0.000, 0.000);
-   wire_pos_cal[1] = std::pair<Float_t,Float_t>(90.150, 4.367);
-   wire_pos_cal[2] = std::pair<Float_t,Float_t>(86.270, 5.192);
-   wire_pos_cal[3] = std::pair<Float_t,Float_t>(87.699, 1.525);
-   wire_pos_cal[4] = std::pair<Float_t,Float_t>(82.029, 0.407);
-   wire_pos_cal[4] = std::pair<Float_t,Float_t>(82.657, 1.238);
-   wire_pos_cal[5] = std::pair<Float_t,Float_t>(82.890,-3.905);
-   wire_pos_cal[7] = std::pair<Float_t,Float_t>(87.144, 1.330);
+  std::ifstream in("position_cal.txt");
+  while(!in.eof()) {
+    std::string line;
+    getline(in,line);
+    if(in.eof()) continue;
+    std::stringstream stm;
+    stm.str(line);
+    int wire;
+    float m,b;
+    if(stm >> wire >> m >> b) wire_pos_cal[wire-1] =  std::pair<Float_t,Float_t>(m,b);
+    else printf("WHY DIDN'T THAT WORK?!?\n");
+  }
+  in.close();
 }
 
 void EnergyAngle::Loop()
@@ -134,7 +138,6 @@ void EnergyAngle::Loop()
       UChar_t wireRear      = 0;
       Bool_t wireAboveThreshold = false;
       for(Int_t i = 0;i<pc_mul;i++) {
-	if(pc_wire[i]==1) continue;
 	Float_t left = pc_ch_left_e[i];
 	Float_t right = pc_ch_right_e[i];
 	MatchPC(pc_wire[i]-1,left,right);
@@ -162,7 +165,7 @@ void EnergyAngle::Loop()
       
       if(!wireAboveThreshold) numBelowPCThreshold++;
 
-      if(!goodRearPosition) {
+      if(!goodRearPosition&&!goodFrontPosition) {
 	noPosition++;
 	if(highSiEDet==2 && highSiEQuad ==1) h_no_pos->Fill(highSiE);      
 	continue;
@@ -296,7 +299,7 @@ std::pair<Float_t,Float_t> EnergyAngle::LookupCMEnergyAngle(UChar_t wire, Float_
   }
 
   if(!done) {
-    printf("Entry wire=%d x=%f energy=%f not found in table!\n",wire,newX,protonEnergy);
+    //printf("Entry wire=%d x=%f energy=%f not found in table!\n",wire,newX,protonEnergy);
   }
   
   return std::pair<Float_t,Float_t>(foundCMEnergy,foundAngle);

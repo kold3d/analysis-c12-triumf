@@ -23,7 +23,7 @@ typedef struct PCBoundEntry {
   Float_t LeftPCBound;
   Float_t RightPCBound;
 } PCBoundEntry;
-typedef std::map<int,std::vector<PCBoundEntry> > PCBoundTable;
+typedef std::map<int,std::map<int,std::vector<PCBoundEntry> > > PCBoundTable;
 
 typedef struct SolidAngleEntry {
   Float_t cmEnergy;
@@ -109,7 +109,7 @@ public :
 
    static void      CalcPCBoundTable();
    static void      ReadPCBoundTable();
-   static std::pair<Float_t,Float_t> LookupPCBound(Int_t,Float_t);
+   static std::pair<Float_t,Float_t> LookupPCBound(Int_t,Int_t,Float_t);
    static void      CalcSolidAngleTable();
    static void      ReadSolidAngleTable();
    static Float_t   LookupSolidAngle(Int_t,Float_t);
@@ -129,8 +129,7 @@ public :
    void EstimateSolidAngleNorm(TH1F*,Int_t);
    void CalcSolidAngleNorm(TH1F*,Int_t);
    void CalcSolidAngleFast(TH1F*,Int_t);
-   std::pair<Int_t,Float_t> CalcPCCell(Float_t,Float_t,Float_t,Float_t);
-   std::pair<Float_t,Float_t> CalcPCBoundary(Int_t,Float_t);
+   std::pair<Float_t,Float_t> CalcPCBoundary(Int_t,Int_t,Float_t);
 
    static PCBoundTable pctable;
    static SolidAngleTable satable;
