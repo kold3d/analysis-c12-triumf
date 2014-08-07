@@ -8,6 +8,7 @@
 #include "EnergyLoss.h"
 #include <fstream>
 #include <sstream>
+#include <TRandom.h>
 
 void Spectra::InitParameters() {
   beam_energy      = 41.62;  //MeV, after havar
@@ -87,29 +88,44 @@ void Spectra::Loop(Float_t incoming, Bool_t draw, Bool_t exact)
 	h_no_pro->Fill(measured_energy);
 	continue;
       }
+
+      //Double_t posRes = 10.;
+
       std::pair<Float_t,Float_t> pc_bound = LookupPCBound(which,1,cm_energy[which]);
+      //pc_bound.first = gRandom->Gaus(pc_bound.first,posRes);
+      //pc_bound.second = gRandom->Gaus(pc_bound.second,posRes);
       if(detector == 2 && fabs(position[which]) < pc_bound.second) s1->Fill(cm_energy[which]);
       
       pc_bound = LookupPCBound(which,2,cm_energy[which]);
+      //pc_bound.first = gRandom->Gaus(pc_bound.first,posRes);
+      //pc_bound.second = gRandom->Gaus(pc_bound.second,posRes);
       if(detector == 2 && fabs(position[which]) > pc_bound.first)
 	s2->Fill(cm_energy[which]);
       
       pc_bound = LookupPCBound(which,3,cm_energy[which]);
+      //pc_bound.first = gRandom->Gaus(pc_bound.first,posRes);
+      //pc_bound.second = gRandom->Gaus(pc_bound.second,posRes);
       if((detector == 3 || detector == 1) && 
 	 fabs(position[which]) > pc_bound.first && fabs(position[which]) < pc_bound.second) 
 	s3->Fill(cm_energy[which]);
 
       pc_bound = LookupPCBound(which,4,cm_energy[which]);
+      //pc_bound.first = gRandom->Gaus(pc_bound.first,posRes);
+      //pc_bound.second = gRandom->Gaus(pc_bound.second,posRes);
       if((detector == 3 || detector == 1) && 
 	 fabs(position[which]) > pc_bound.first && fabs(position[which]) < pc_bound.second) 
 	s4->Fill(cm_energy[which]);
 
       pc_bound = LookupPCBound(which,5,cm_energy[which]);
+      // pc_bound.first = gRandom->Gaus(pc_bound.first,posRes);
+      // pc_bound.second = gRandom->Gaus(pc_bound.second,posRes);
       if((detector == 3 || detector == 1) && 
 	 fabs(position[which]) > pc_bound.first && fabs(position[which]) < pc_bound.second) 
 	s5->Fill(cm_energy[which]);
 
       pc_bound = LookupPCBound(which,6,cm_energy[which]);
+      //pc_bound.first = gRandom->Gaus(pc_bound.first,posRes);
+      //pc_bound.second = gRandom->Gaus(pc_bound.second,posRes);
       if((detector == 3 || detector == 1) && 
 	 fabs(position[which]) > pc_bound.first && fabs(position[which]) < pc_bound.second) 
 	s6->Fill(cm_energy[which]);

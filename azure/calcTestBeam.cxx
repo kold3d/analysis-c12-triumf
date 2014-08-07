@@ -8,6 +8,7 @@
 #include <TFile.h>
 
 int main(int argc, const char** argv) {
+  std::cout << "here" << std::endl;
   //Make config structure
   Config configure(std::cout);
   
