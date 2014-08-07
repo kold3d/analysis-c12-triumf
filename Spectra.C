@@ -16,8 +16,8 @@ void Spectra::InitParameters() {
   m1 = 12.;
   m2 =  1.;
 
-  density = 0.000622*pressure/760/temperature*293;
- 
+  density = 9.95784e-05+7.20831e-07*pressure;
+
   proton = new EnergyLoss("dEdx_proton_methane_290K_400torr.dat",density*100.);
   projectile = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
 }
