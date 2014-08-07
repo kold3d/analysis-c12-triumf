@@ -1,12 +1,12 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Wed Jun 25 12:54:07 2014 by ROOT version 5.34/03
-// from TTree c12Data/12C Test Beam
-// found on file: ../data/tree/c12_data_run19-25.root
+// Mon Jul 14 20:50:38 2014 by ROOT version 5.34/18
+// from TTree rawData/Raw Data Tree
+// found on file: carbon_triumf_09-13_t.root
 //////////////////////////////////////////////////////////
 
-#ifndef EnergyAngle_h
-#define EnergyAngle_h
+#ifndef PosCal_h
+#define PosCal_h
 
 #include <TROOT.h>
 #include <TChain.h>
@@ -16,19 +16,7 @@
 
 // Fixed size dimensions of array or collections stored in the TTree if any.
 
-class EnergyLoss;
-
-typedef struct LookupEntry {
-  Float_t range;
-  Float_t r;
-  Float_t angle;
-  Float_t cmEnergy;
-  Float_t protonEnergy;
-} LookupEntry;
-
-typedef std::map<int,std::map<float,std::vector<LookupEntry> > > LookupTable;
-
-class EnergyAngle {
+class PosCal {
 public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
    Int_t           fCurrent; //!current Tree number in a TChain
@@ -63,8 +51,8 @@ public :
    TBranch        *b_pc_ch_left_t;   //!
    TBranch        *b_ic_ch;   //!
 
-   EnergyAngle(TTree *tree=0);
-   virtual ~EnergyAngle();
+   PosCal(TTree *tree=0);
+   virtual ~PosCal();
    virtual Int_t    Cut(Long64_t entry);
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
@@ -72,69 +60,39 @@ public :
    virtual void     Loop();
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
-
-   static void CalcLookupTable();
-   static void ReadLookupTable();
-   static std::pair<Float_t,Float_t> LookupCMEnergyAngle(UChar_t,Float_t,Float_t);
-
- private:
-   static void InitParameters();
-   Float_t CalcPosition(UChar_t, Float_t, Float_t);
-   void MatchPC(UChar_t, Float_t&, Float_t&);
-
-   static Float_t sum_pc_threshold;
-   static Float_t si_threshold;
-   static Float_t beam_energy;   
-   static Float_t pressure;  
-   static Float_t temperature;      
-
-   static std::map<int,std::pair<float,float> > wire_offset_low;
-   static std::map<int,std::pair<float,float> > wire_gain_diff_low;
-   static std::map<int,std::pair<float,float> > wire_offset_high;
-   static std::map<int,std::pair<float,float> > wire_gain_diff_high;
-   static std::map<int,std::pair<float,float> > wire_pos_cal;
-   
-   static LookupTable table;
-
-   static EnergyLoss* projectile;
-   static EnergyLoss* proton;
-
-   static Float_t m1;
-   static Float_t m2;
 };
 
 #endif
 
-#ifdef EnergyAngle_cxx
-EnergyAngle::EnergyAngle(TTree *tree) : fChain(0) 
+#ifdef PosCal_cxx
+PosCal::PosCal(TTree *tree) : fChain(0) 
 {
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../../daq/offline/data/tree/carbon_triumf_09-13_t.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("carbon_triumf_09-13_t.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("../../daq/offline/data/tree/carbon_triumf_09-13_t.root");
+         f = new TFile("carbon_triumf_09-13_t.root");
       }
       f->GetObject("rawData",tree);
 
    }
    Init(tree);
-   InitParameters();
 }
 
-EnergyAngle::~EnergyAngle()
+PosCal::~PosCal()
 {
    if (!fChain) return;
    delete fChain->GetCurrentFile();
 }
 
-Int_t EnergyAngle::GetEntry(Long64_t entry)
+Int_t PosCal::GetEntry(Long64_t entry)
 {
 // Read contents of entry.
    if (!fChain) return 0;
    return fChain->GetEntry(entry);
 }
-Long64_t EnergyAngle::LoadTree(Long64_t entry)
+Long64_t PosCal::LoadTree(Long64_t entry)
 {
 // Set the environment to read one entry
    if (!fChain) return -5;
@@ -147,7 +105,7 @@ Long64_t EnergyAngle::LoadTree(Long64_t entry)
    return centry;
 }
 
-void EnergyAngle::Init(TTree *tree)
+void PosCal::Init(TTree *tree)
 {
    // The Init() function is called when the selector needs to initialize
    // a new tree or chain. Typically here the branch addresses and branch
@@ -179,7 +137,7 @@ void EnergyAngle::Init(TTree *tree)
    Notify();
 }
 
-Bool_t EnergyAngle::Notify()
+Bool_t PosCal::Notify()
 {
    // The Notify() function is called when a new file is opened. This
    // can be either for a new TTree in a TChain or when when a new TTree
@@ -190,18 +148,18 @@ Bool_t EnergyAngle::Notify()
    return kTRUE;
 }
 
-void EnergyAngle::Show(Long64_t entry)
+void PosCal::Show(Long64_t entry)
 {
 // Print contents of entry.
 // If entry is not specified, print current entry
    if (!fChain) return;
    fChain->Show(entry);
 }
-Int_t EnergyAngle::Cut(Long64_t entry)
+Int_t PosCal::Cut(Long64_t entry)
 {
 // This function may be called from Loop.
 // returns  1 if entry is accepted.
 // returns -1 otherwise.
    return 1;
 }
-#endif // #ifdef EnergyAngle_cxx
+#endif // #ifdef PosCal_cxx

@@ -12,44 +12,59 @@ LookupTable EnergyAngle::table;
 
 void EnergyAngle::InitParameters() {
 
-  sum_pc_threshold = 0.;   //In Channels
+  sum_pc_threshold = 0.;     //In Channels
   si_threshold     = 350.;   //In KeV
-  beam_energy      = 41.62; //In MeV, after window
+  beam_energy      = 41.62;  //In MeV, after window
   pressure         = 785.;   //In Torr
   temperature      = 295.;   //In Kelvin
   m1 = 12.;
   m2 = 1.;
 
-  Float_t gasConstant = 8.3144621;
-  Float_t torrInPa = 133.322368;
-  Float_t molarMassMethane = 0.01604;
-
-  Float_t density = 0.000622*pressure/760/temperature*293;
+  Float_t density = 9.95784e-05+7.20831e-07*pressure;
 
   projectile = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
   proton = new EnergyLoss("dEdx_proton_methane_290K_400torr.dat",density*100.);
 
+  //Gain intercept from channel to mV for channels < 120
+  wire_offset_low[0] = std::pair<float,float>(-16.597237,-16.564661);
+  wire_offset_low[1] = std::pair<float,float>(-19.425051,-17.123547);
+  wire_offset_low[2] = std::pair<float,float>(-18.949633,-20.48386);
+  wire_offset_low[3] = std::pair<float,float>(-20.112179,-20.631563);
+  wire_offset_low[4] = std::pair<float,float>(-11.075700,-11.315839);
+  wire_offset_low[5] = std::pair<float,float>(-12.573323,-12.508942);
+  wire_offset_low[6] = std::pair<float,float>(-13.271634,-12.684995);
+  wire_offset_low[7] = std::pair<float,float>(-11.083432,-12.783762);
+
+  //Gain slope from channel to mV for channels < 120
+  wire_gain_diff_low[0] = std::pair<float,float>(0.584295,0.559508);
+  wire_gain_diff_low[1] = std::pair<float,float>(0.623926,0.618987);
+  wire_gain_diff_low[2] = std::pair<float,float>(0.620097,0.639888);
+  wire_gain_diff_low[3] = std::pair<float,float>(0.645479,0.652981);
+  wire_gain_diff_low[4] = std::pair<float,float>(0.395027,0.400060);
+  wire_gain_diff_low[5] = std::pair<float,float>(0.416100,0.401508);
+  wire_gain_diff_low[6] = std::pair<float,float>(0.437602,0.402177);
+  wire_gain_diff_low[7] = std::pair<float,float>(0.405029,0.410348);
+
+  //Gain intercept from channel to mV for channels > 120
+  wire_offset_high[0] = std::pair<float,float>(-2.939841,-5.237459);
+  wire_offset_high[1] = std::pair<float,float>(-4.236787,-5.647059);
+  wire_offset_high[2] = std::pair<float,float>(-2.776138,-2.112775);
+  wire_offset_high[3] = std::pair<float,float>(-3.376969,-3.132434);
+  wire_offset_high[4] = std::pair<float,float>(-3.189401,-3.161160);
+  wire_offset_high[5] = std::pair<float,float>(-3.138486,-4.980239);
+  wire_offset_high[6] = std::pair<float,float>(-2.918014,-3.946469);
+  wire_offset_high[7] = std::pair<float,float>(-2.594841,-4.308412);
+
+  //Gain slope from channel to mV for channels > 120
+  wire_gain_diff_high[0] = std::pair<float,float>(0.413765,0.415051);
+  wire_gain_diff_high[1] = std::pair<float,float>(0.444331,0.470588);
+  wire_gain_diff_high[2] = std::pair<float,float>(0.431105,0.443483);
+  wire_gain_diff_high[3] = std::pair<float,float>(0.455244,0.447787);
+  wire_gain_diff_high[4] = std::pair<float,float>(0.297162,0.298397);
+  wire_gain_diff_high[5] = std::pair<float,float>(0.304225,0.287005);
+  wire_gain_diff_high[6] = std::pair<float,float>(0.309277,0.292386);
+  wire_gain_diff_high[7] = std::pair<float,float>(0.302560,0.304448);
   
-  //Noise peaks
-  wire_offset[7] = std::pair<float,float>(0.0,0.0);
-  wire_offset[6] = std::pair<float,float>(38.5129,39.6507);
-  wire_offset[5] = std::pair<float,float>(39.8341,39.0006);
-  wire_offset[4] = std::pair<float,float>(38.8358,39.2025);
-  wire_offset[3] = std::pair<float,float>(41.139,39.7448);
-  wire_offset[2] = std::pair<float,float>(39.1638,39.6441);
-  wire_offset[1] = std::pair<float,float>(40.8464,39.9842);
-  wire_offset[0] = std::pair<float,float>(38.1933,39.6582);
-
-  //Gain matches from pulser (ratio left to right);
-  wire_gain_diff[7] = std::pair<float,float>(1.00636,1.00000);
-  wire_gain_diff[6] = std::pair<float,float>(0.97957,1.02192);
-  wire_gain_diff[5] = std::pair<float,float>(1.00233,1.05483);
-  wire_gain_diff[4] = std::pair<float,float>(1.02017,1.02399);
-  wire_gain_diff[3] = std::pair<float,float>(0.97122,0.99870);
-  wire_gain_diff[2] = std::pair<float,float>(1.02667,0.98590);
-  wire_gain_diff[1] = std::pair<float,float>(0.99821,0.95724);
-  wire_gain_diff[0] = std::pair<float,float>(1.0,1.0);
-
    //Position calibration (slope,intercept)
   std::ifstream in("position_cal.txt");
   while(!in.eof()) {
@@ -227,10 +242,18 @@ void EnergyAngle::Loop()
 }
 
 void EnergyAngle::MatchPC(UChar_t wire, Float_t& left_ch,Float_t& right_ch) {
-  Float_t left = left_ch-wire_offset[wire].first;
-  Float_t right = right_ch-wire_offset[wire].second;
-  left *= wire_gain_diff[wire].first;
-  right *= wire_gain_diff[wire].second;
+  Float_t left; 
+  Float_t right;
+  if(left_ch<120) {
+    left = left_ch*wire_gain_diff_low[wire].first+wire_offset_low[wire].first;
+  } else {
+    left = left_ch*wire_gain_diff_high[wire].first+wire_offset_high[wire].first;
+  }
+  if(right_ch<120) {
+    right = right_ch*wire_gain_diff_low[wire].second+wire_offset_low[wire].second;
+  } else {
+    right = right_ch*wire_gain_diff_high[wire].second+wire_offset_high[wire].second;
+  }
 
   left_ch = left;
   right_ch = right;
@@ -394,8 +417,10 @@ Float_t EnergyAngle::si_threshold;
 Float_t EnergyAngle::beam_energy;   
 Float_t EnergyAngle::pressure;  
 Float_t EnergyAngle::temperature;      
-std::map<int,std::pair<float,float> > EnergyAngle::wire_offset;
-std::map<int,std::pair<float,float> > EnergyAngle::wire_gain_diff;
+std::map<int,std::pair<float,float> > EnergyAngle::wire_offset_low;
+std::map<int,std::pair<float,float> > EnergyAngle::wire_gain_diff_low;
+std::map<int,std::pair<float,float> > EnergyAngle::wire_offset_high;
+std::map<int,std::pair<float,float> > EnergyAngle::wire_gain_diff_high;
 std::map<int,std::pair<float,float> > EnergyAngle::wire_pos_cal;
 EnergyLoss* EnergyAngle::projectile;
 EnergyLoss* EnergyAngle::proton;
