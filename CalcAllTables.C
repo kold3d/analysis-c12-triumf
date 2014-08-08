@@ -1,5 +1,7 @@
 {
   gSystem->CompileMacro("EnergyLoss.C");
+  gSystem->CompileMacro("Calibrations.C");
+  Calibrations::InitParameters();
   gSystem->CompileMacro("EnergyAngle.C");
   EnergyAngle::CalcLookupTable();
   gSystem->CompileMacro("Spectra.C");

@@ -9,19 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include <TRandom.h>
-
-void Spectra::InitParameters() {
-  beam_energy      = 41.62;  //MeV, after havar
-  pressure         = 785.;   //In Torr
-  temperature      = 295.;   //In Kelvin
-  m1 = 12.;
-  m2 =  1.;
-
-  density = 9.95784e-05+7.20831e-07*pressure;
-
-  proton = new EnergyLoss("dEdx_proton_methane_290K_400torr.dat",density*100.);
-  projectile = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
-}
+#include "Calibrations.h"
 
 void Spectra::Loop(Float_t incoming, Bool_t draw, Bool_t exact)
 {
@@ -89,47 +77,46 @@ void Spectra::Loop(Float_t incoming, Bool_t draw, Bool_t exact)
 	continue;
       }
 
-      //Double_t posRes = 10.;
-
+      Bool_t placed = false;
       std::pair<Float_t,Float_t> pc_bound = LookupPCBound(which,1,cm_energy[which]);
-      //pc_bound.first = gRandom->Gaus(pc_bound.first,posRes);
-      //pc_bound.second = gRandom->Gaus(pc_bound.second,posRes);
-      if(detector == 2 && fabs(position[which]) < pc_bound.second) s1->Fill(cm_energy[which]);
+      if(detector == 2 && fabs(position[which]) < pc_bound.second && !placed) {
+	s1->Fill(cm_energy[which]);
+	placed = true;
+      }
       
       pc_bound = LookupPCBound(which,2,cm_energy[which]);
-      //pc_bound.first = gRandom->Gaus(pc_bound.first,posRes);
-      //pc_bound.second = gRandom->Gaus(pc_bound.second,posRes);
-      if(detector == 2 && fabs(position[which]) > pc_bound.first)
+      if(detector == 2 && fabs(position[which]) > pc_bound.first && !placed) {
 	s2->Fill(cm_energy[which]);
+	placed = true;
+      }
       
       pc_bound = LookupPCBound(which,3,cm_energy[which]);
-      //pc_bound.first = gRandom->Gaus(pc_bound.first,posRes);
-      //pc_bound.second = gRandom->Gaus(pc_bound.second,posRes);
       if((detector == 3 || detector == 1) && 
-	 fabs(position[which]) > pc_bound.first && fabs(position[which]) < pc_bound.second) 
+	 fabs(position[which]) < pc_bound.second && !placed) {
 	s3->Fill(cm_energy[which]);
+	placed = true;
+      }
 
       pc_bound = LookupPCBound(which,4,cm_energy[which]);
-      //pc_bound.first = gRandom->Gaus(pc_bound.first,posRes);
-      //pc_bound.second = gRandom->Gaus(pc_bound.second,posRes);
       if((detector == 3 || detector == 1) && 
-	 fabs(position[which]) > pc_bound.first && fabs(position[which]) < pc_bound.second) 
+	 fabs(position[which]) > pc_bound.first && fabs(position[which]) < pc_bound.second && !placed) {
 	s4->Fill(cm_energy[which]);
+	placed = true;
+      }
 
       pc_bound = LookupPCBound(which,5,cm_energy[which]);
-      // pc_bound.first = gRandom->Gaus(pc_bound.first,posRes);
-      // pc_bound.second = gRandom->Gaus(pc_bound.second,posRes);
       if((detector == 3 || detector == 1) && 
-	 fabs(position[which]) > pc_bound.first && fabs(position[which]) < pc_bound.second) 
+	 fabs(position[which]) > pc_bound.first && fabs(position[which]) < pc_bound.second && !placed) {
 	s5->Fill(cm_energy[which]);
+	placed = true;
+      }
 
       pc_bound = LookupPCBound(which,6,cm_energy[which]);
-      //pc_bound.first = gRandom->Gaus(pc_bound.first,posRes);
-      //pc_bound.second = gRandom->Gaus(pc_bound.second,posRes);
       if((detector == 3 || detector == 1) && 
-	 fabs(position[which]) > pc_bound.first && fabs(position[which]) < pc_bound.second) 
+	 fabs(position[which]) > pc_bound.first && !placed) {
 	s6->Fill(cm_energy[which]);
-
+	placed = true;
+      }
    }
 
    TCanvas* c1;
@@ -203,40 +190,16 @@ void Spectra::DivideTargetThickness(TH1F *f){
     Double_t binLowEdge = xaxis->GetBinLowEdge(i);
     Double_t binUpEdge = xaxis->GetBinUpEdge(i);
     if(binLowEdge==0.) binLowEdge+=0.001;
-    binLowEdge *= (m1+m2)/m2;
-    binUpEdge *= (m1+m2)/m2; // From C.M. to Lab Frame
+    binLowEdge *= (Calibrations::m1+Calibrations::m2)/Calibrations::m2;
+    binUpEdge *= (Calibrations::m1+Calibrations::m2)/Calibrations::m2; // From C.M. to Lab Frame
     Double_t binContent = f->GetBinContent(i);
     Double_t binError = f->GetBinError(i);
-    Double_t delta_x = projectile->CalcRange(binUpEdge,binLowEdge);
+    Double_t delta_x = Calibrations::projectile->CalcRange(binUpEdge,binLowEdge);
     delta_x /= 10.0;
     Float_t molarMassMethane = 0.01604;
-    Double_t factor = 4.e-27*density*delta_x*TMath::Na()/molarMassMethane;
+    Double_t factor = 4.e-27*Calibrations::density*delta_x*TMath::Na()/molarMassMethane;
     binContent /= factor;
     binError /= factor;
-    f->SetBinContent(i,binContent);
-    f->SetBinError(i,binError);
-  }
-}
-
-void Spectra::EstimateSolidAngleNorm(TH1F* f, Int_t region) {
-  Int_t i_size = f->GetSize();
-  TAxis *xaxis = f->GetXaxis();
-  for(Int_t i=1;i<i_size-1;i++){
-    Double_t binCenter = xaxis->GetBinCenter(i);
-    binCenter *= (m1+m2)/m2;
-    Double_t binContent = f->GetBinContent(i);
-    Double_t binError = f->GetBinError(i);
-    Double_t delta_x = projectile->CalcRange(beam_energy,binCenter);
-    Double_t x=0.;
-    if(region == 1) x = 0;
-    else if(region == 2) x = 17.5;
-    else if(region == 3) x = 42.21;
-    else if(region == 4) x = 54.71;
-    else if(region == 5) x = 67.21;
-    else if(region == 6) x = 79.71;
-    Double_t r2 = x*x+(513.-delta_x)*(513.-delta_x);
-    binContent *= r2;
-    binError *= r2;
     f->SetBinContent(i,binContent);
     f->SetBinError(i,binError);
   }
@@ -255,12 +218,12 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
     printf("Calculating solid angle for Region %d, Bin %d\n",region,i);
 
     Double_t binCenter = xaxis->GetBinCenter(i);
-    binCenter *=  (m1+m2)/m2;
+    binCenter *=  (Calibrations::m1+Calibrations::m2)/Calibrations::m2;
     Double_t binContent = f->GetBinContent(i);
     if(binContent == 0.) continue;
     Double_t binError = f->GetBinError(i);
-    Double_t depth = projectile->CalcRange(beam_energy,binCenter);
-    Double_t z = 513.-depth;
+    Double_t depth = Calibrations::projectile->CalcRange(Calibrations::beam_energy,binCenter);
+    Double_t z = Calibrations::window_to_si-depth;
     
     Float_t sum = 0.;
     if(region == 1) {
@@ -331,7 +294,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       f->SetBinError(i,0.);
     } else {
       Float_t change_bin_content = 4.*sum*cos(h->GetMean()*3.14159/180);
-      printf("Region: %d CM Energy: %f Solid Angle: %f, change_bin_content:%f\n",region,binCenter*m2/(m1+m2),sum,change_bin_content);
+      printf("Region: %d CM Energy: %f Solid Angle: %f, change_bin_content:%f\n",region,binCenter*Calibrations::m2/(Calibrations::m1+Calibrations::m2),sum,change_bin_content);
       binContent /= 4.*sum*cos(h->GetMean()*3.14159/180);
       binError /= 4.*sum*cos(h->GetMean()*3.14159/180);
       f->SetBinContent(i,binContent);
@@ -370,11 +333,11 @@ void Spectra::CalcSolidAngleFast(TH1F* f, Int_t region) {
 }
 
 std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t which, Int_t region, Float_t cmEnergy){
-	cmEnergy *= (m1+m2)/m2;
+	cmEnergy *= (Calibrations::m1+Calibrations::m2)/Calibrations::m2;
 
-	Double_t depth_bound = projectile->CalcRange(beam_energy,cmEnergy);
-	Double_t z_bound = 513.-depth_bound;
-	Double_t dist_wire = (which == 1) ? z_bound-28.5-12.5 : z_bound-28.5;
+	Double_t depth_bound = Calibrations::projectile->CalcRange(Calibrations::beam_energy,cmEnergy);
+	Double_t z_bound = Calibrations::window_to_si-depth_bound;
+	Double_t dist_wire = (which == 1) ? z_bound-Calibrations::anode_to_si-Calibrations::anode_sep : z_bound-Calibrations::anode_to_si;
 
 	Boundary wire_fixed_values[6];
 	wire_fixed_values[0] = Boundary(0.,10.);
@@ -448,7 +411,7 @@ std::pair<Float_t,Float_t> Spectra::LookupPCBound(Int_t which, Int_t region,Floa
 
 void Spectra::ReadPCBoundTable(){
   pctable.clear();
-  std::ifstream in("pc_boundary_table.out");
+  std::ifstream in("tables/pc_boundary_table.out");
   std::string line;
   while(!in.eof()){
     getline(in,line);
@@ -466,9 +429,8 @@ void Spectra::ReadPCBoundTable(){
 
 void Spectra::CalcPCBoundTable(){
   Spectra sp;
-  InitParameters();
   pctable.clear();
-  FILE* out = fopen("pc_boundary_table.out","w");
+  FILE* out = fopen("tables/pc_boundary_table.out","w");
   std::pair<Float_t,Float_t> pc_bound;
   for(Int_t plane = 0;plane<2;plane++) {
     for(Int_t region = 1; region <= 6; region++){
@@ -534,7 +496,7 @@ Float_t Spectra::LookupSolidAngle(Int_t region,Float_t cmEnergy){
 
 void Spectra::ReadSolidAngleTable(){
   satable.clear();
-  std::ifstream in("solid_angle_table.out");
+  std::ifstream in("tables/solid_angle_table.out");
   std::string line;
   while(!in.eof()){
     getline(in,line);
@@ -551,16 +513,15 @@ void Spectra::ReadSolidAngleTable(){
 }
 
 void Spectra::CalcSolidAngleTable(){
-  InitParameters();
   Spectra sp;
   satable.clear();
-  FILE* out = fopen("solid_angle_table.out","w");
+  FILE* out = fopen("tables/solid_angle_table.out","w");
   Float_t elementSize = 1.;
   for(Int_t region = 1; region <= 6; region++){
     for(Double_t cmEnergy = 0.001; cmEnergy <= 5.0; cmEnergy+=0.1){
       TH1F* h = new TH1F(Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),360,0,180);
-      Double_t depth =projectile->CalcRange(beam_energy,cmEnergy*(m1+m2)/m2);
-      Double_t z = 513.-depth;
+      Double_t depth =Calibrations::projectile->CalcRange(Calibrations::beam_energy,cmEnergy*(Calibrations::m1+Calibrations::m2)/Calibrations::m2);
+      Double_t z = Calibrations::window_to_si-depth;
       
 
     Float_t sum = 0.;
@@ -629,13 +590,5 @@ void Spectra::CalcSolidAngleTable(){
   fclose(out);
 }
 
-Float_t Spectra::pressure;
-Float_t Spectra::temperature;
-EnergyLoss* Spectra::proton;
-EnergyLoss* Spectra::projectile;
-Float_t Spectra::density;
-Float_t Spectra::m1;
-Float_t Spectra::m2;
-Float_t Spectra::beam_energy;
 PCBoundTable Spectra::pctable;
 SolidAngleTable Spectra::satable;

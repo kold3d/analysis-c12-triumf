@@ -1,10 +1,16 @@
 void CalcSpectraRMatrix(TTree* tree,Float_t incoming) {
   gSystem->CompileMacro("EnergyLoss.C");
+  gSystem->CompileMacro("Calibrations.C");
+  Calibrations::InitParameters();
+  //gSystem->CompileMacro("PosCal.C");
   gSystem->CompileMacro("EnergyAngle.C");
   EnergyAngle::ReadLookupTable();
   gSystem->CompileMacro("Spectra.C");
   Spectra::ReadPCBoundTable();
   Spectra::ReadSolidAngleTable();
+
+  //PosCal t(tree);
+  //t.Loop();
 
   EnergyAngle t1(tree);
   t1.Loop();
@@ -13,6 +19,6 @@ void CalcSpectraRMatrix(TTree* tree,Float_t incoming) {
   Spectra t2(energyAngle);
   t2.Loop(incoming,false,true);
 
-  gSystem->Exec("./runRMatrix");
+  //  gSystem->Exec("./runRMatrix");
   gROOT->ProcessLine(".X DrawSpectra.C");
 }

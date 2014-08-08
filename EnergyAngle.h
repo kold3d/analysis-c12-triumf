@@ -78,29 +78,9 @@ public :
    static std::pair<Float_t,Float_t> LookupCMEnergyAngle(UChar_t,Float_t,Float_t);
 
  private:
-   static void InitParameters();
    Float_t CalcPosition(UChar_t, Float_t, Float_t);
-   void MatchPC(UChar_t, Float_t&, Float_t&);
 
-   static Float_t sum_pc_threshold;
-   static Float_t si_threshold;
-   static Float_t beam_energy;   
-   static Float_t pressure;  
-   static Float_t temperature;      
-
-   static std::map<int,std::pair<float,float> > wire_offset_low;
-   static std::map<int,std::pair<float,float> > wire_gain_diff_low;
-   static std::map<int,std::pair<float,float> > wire_offset_high;
-   static std::map<int,std::pair<float,float> > wire_gain_diff_high;
-   static std::map<int,std::pair<float,float> > wire_pos_cal;
-   
    static LookupTable table;
-
-   static EnergyLoss* projectile;
-   static EnergyLoss* proton;
-
-   static Float_t m1;
-   static Float_t m2;
 };
 
 #endif
@@ -119,7 +99,6 @@ EnergyAngle::EnergyAngle(TTree *tree) : fChain(0)
 
    }
    Init(tree);
-   InitParameters();
 }
 
 EnergyAngle::~EnergyAngle()

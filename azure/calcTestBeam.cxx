@@ -41,7 +41,7 @@ int main(int argc, const char** argv) {
   r_matrix->Reset();
   TFile* dist_file = new TFile(argv[3],"read");
   
-  double sigma = 0.05;
+  double sigma = atof(argv[4]);
   for(int i = 1; i <= spec->GetNbinsX() ; i++) {
     if(spec->GetBinContent(i) == 0.) continue;
     TH1F* dist = (TH1F*) dist_file->Get(Form("bin_%d_cm_fk",i));
@@ -70,8 +70,9 @@ int main(int argc, const char** argv) {
     }
     r_matrix->SetBinContent(i,sumNum/sumDenom);    
   }
-  spec_file->cd();
+  TFile* r_matrix_file = new TFile("../rmatrix.root","update");
   r_matrix->Write();
+  r_matrix_file->Close();
   spec_file->Close();
   dist_file->Close();
 }
