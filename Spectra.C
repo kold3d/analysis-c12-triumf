@@ -23,7 +23,7 @@ void Spectra::Loop(Float_t incoming, Bool_t draw, Bool_t exact)
   }
   cutFile->Close();
 
-  Int_t numBins = 50;
+  Int_t numBins = 100;
 
   TH1F* s1 = new TH1F("s1","Forward Angles",numBins,0,3.);
   s1->Sumw2();

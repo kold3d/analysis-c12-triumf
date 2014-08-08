@@ -19,6 +19,6 @@ void CalcSpectraRMatrix(TTree* tree,Float_t incoming) {
   Spectra t2(energyAngle);
   t2.Loop(incoming,false,true);
 
-  //  gSystem->Exec("./runRMatrix");
+  gSystem->Exec("./runRMatrix");
   gROOT->ProcessLine(".X DrawSpectra.C");
 }
