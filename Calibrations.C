@@ -4,21 +4,21 @@
 #include <sstream>
 
 void Calibrations::InitParameters() {
-  m1               = 12.  ;   //AMU of projectile
-  m2               = 1.   ;   //AMU of target
-  beam_energy      = 41.62;   //In MeV, after havar window
-  sum_pc_threshold = 0.   ;   //In Channels
-  si_threshold     = 350. ;   //In KeV
+  m1               = 8.    ;   //AMU of projectile
+  m2               = 1.    ;   //AMU of target
+  beam_energy      = 31.276;   //In MeV, after havar window
+  sum_pc_threshold = 0.    ;   //In Channels
+  si_threshold     = 350.  ;   //In KeV
 
   anode_to_si      = 28.5 ;   //Distance from Si detectors to back anode plane
   anode_sep        = 12.5 ;   //Distance from one anode to the next
   window_to_si     = 513. ;   //Distance from entrance window to si detectors
 
-  Float_t pressure    = 785;  //In torr
+  Float_t pressure    = 1010; //In torr
   Float_t temperature = 295;  //In Kelvin, not used
 
   density = 9.95784e-05+7.20831e-07*pressure;  //From linear fit to energy dep
-  projectile = new EnergyLoss("tables/dEdx_carbon_methane_290K_400torr.dat",density*100.);
+  projectile = new EnergyLoss("tables/dedx_8he_methane.dat",density*100.);
   proton     = new EnergyLoss("tables/dEdx_proton_methane_290K_400torr.dat",density*100.);
 
   //Gain intercept from channel to mV for channels < 120
