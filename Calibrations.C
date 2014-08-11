@@ -14,10 +14,13 @@ void Calibrations::InitParameters() {
   anode_sep        = 12.5 ;   //Distance from one anode to the next
   window_to_si     = 513. ;   //Distance from entrance window to si detectors
 
-  Float_t pressure    = 1010; //In torr
+  pressure            = 1010; //In torr
   Float_t temperature = 295;  //In Kelvin, not used
 
-  density = 9.95784e-05+7.20831e-07*pressure;  //From linear fit to energy dep
+  density_offset = 9.95784e-05;
+  density_slope  = 7.20831e-07;
+
+  density = density_offset+density_slope*pressure;  //From linear fit to energy dep
   projectile = new EnergyLoss("tables/dedx_8he_methane.dat",density*100.);
   proton     = new EnergyLoss("tables/dEdx_proton_methane_290K_400torr.dat",density*100.);
 
@@ -88,13 +91,65 @@ void Calibrations::InitParameters() {
   si_cal[2][1] = std::pair<Float_t,Float_t>(1.86496555662152,132.646141278295);
   si_cal[2][2] = std::pair<Float_t,Float_t>(1.87315964529692,142.573229493874);
   si_cal[2][3] = std::pair<Float_t,Float_t>(1.88828167671430,155.291004367064);
+
+  //Read run by run corrections for PC
+  in.open("tables/wires_scaled_table.out");
+  std::pair<Float_t,Float_t> sum[8];
+  std::pair<Int_t,Int_t> entries[8];
+  for(int i = 0;i<8;i++) {
+    sum[i].first=0.;
+    sum[i].second=0.;
+    entries[i].first=0;
+    entries[i].second=0;
+  }
+  while(!in.eof()) {
+    std::string line;
+    getline(in,line);
+    if(in.eof()) continue;
+    std::stringstream stm;
+    stm.str(line);
+    int run,wire;
+    float left,right;
+    if(stm >> run >> wire >> left >> right) {
+      pc_run_gain[run][wire-1] = std::pair<Float_t,Float_t>(left,right);
+      if(left>0.) {
+	sum[wire-1].first += left;
+	entries[wire-1].first++;
+      } 
+      if(right>0.) {
+	sum[wire-1].second += right;
+	entries[wire-1].second++;
+      }
+    }
+  }
+  in.close();
+  //Normalize to the mean value
+  for(std::map<int,std::map<int,std::pair<Float_t,Float_t> > >::iterator it1 = pc_run_gain.begin();
+      it1 != pc_run_gain.end(); it1++) {
+    for(std::map<int,std::pair<Float_t,Float_t> >::iterator it2 = it1->second.begin();
+	it2 != it1->second.end(); it2++) {
+      it2->second.first /= sum[it2->first].first/entries[it2->first].first;
+      it2->second.second /= sum[it2->first].second/entries[it2->first].second;
+    }
+  }
 }
 
-void Calibrations::MatchPC(Float_t& left, Float_t& right, Int_t wire) {
+void Calibrations::MatchPC(Float_t& left, Float_t& right, Int_t wire, Int_t run) {
   left = (left<120) ? left*wire_gain_diff_low[wire].first+wire_offset_low[wire].first :
     left*wire_gain_diff_high[wire].first+wire_offset_high[wire].first;
   right = (right<120) ? right*wire_gain_diff_low[wire].second+wire_offset_low[wire].second :
     right*wire_gain_diff_high[wire].second+wire_offset_high[wire].second;
+  if(run>0) {
+    left *= pc_run_gain[run][wire].first;
+    right *= pc_run_gain[run][wire].second;
+  }
+}
+
+void Calibrations::ScaleDensity(Float_t scaleFactor) {
+  density = density_offset+density_slope*pressure;
+  density *= scaleFactor;
+  proton->SetConversion(density*100);
+  projectile->SetConversion(density*100);
 }
 
 Float_t Calibrations::m1;
@@ -102,6 +157,9 @@ Float_t Calibrations::m2;
 Float_t Calibrations::beam_energy;
 Float_t Calibrations::sum_pc_threshold;
 Float_t Calibrations::si_threshold;
+Float_t Calibrations::pressure;
+Float_t Calibrations::density_offset;
+Float_t Calibrations::density_slope;
 Float_t Calibrations::density;
 EnergyLoss* Calibrations::projectile;
 EnergyLoss* Calibrations::proton;
@@ -114,4 +172,5 @@ std::map<int,std::pair<float,float> > Calibrations::wire_offset_high;
 std::map<int,std::pair<float,float> > Calibrations::wire_gain_diff_high;
 std::map<int,std::pair<float,float> > Calibrations::wire_pos_cal;
 std::map<int,std::map<int,std::pair<float,float> > > Calibrations::si_cal;
+std::map<int,std::map<int,std::pair<Float_t,Float_t> > > Calibrations::pc_run_gain;
 

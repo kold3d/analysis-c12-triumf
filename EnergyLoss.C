@@ -31,6 +31,13 @@ TObject(){
       energy_.push_back(file_energy);
     }
     dEdx_.push_back(file_elec*conversion + file_nucl*conversion);
+    dEdx_no_norm_.push_back(file_elec+file_nucl);
+  }
+}
+
+void EnergyLoss::SetConversion(double conversion) {
+  for(int i = 0;i<dEdx_.size();i++) {
+    dEdx_[i]=dEdx_no_norm_[i]*conversion;
   }
 }
 

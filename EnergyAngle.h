@@ -33,7 +33,7 @@ public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
    Int_t           fCurrent; //!current Tree number in a TChain
 
-   // Declaration of leaf types
+    // Declaration of leaf types
    UChar_t         si_mul;
    UChar_t         si_det[12];   //[si_mul]
    UChar_t         si_quad[12];   //[si_mul]
@@ -46,7 +46,10 @@ public :
    Int_t           pc_ch_left_e[8];   //[pc_mul]
    Int_t           pc_ch_right_t[8];   //[pc_mul]
    Int_t           pc_ch_left_t[8];   //[pc_mul]
-   Int_t           ic_ch;
+   Int_t           ic_ch_e;
+   Int_t           ic_ch_t;
+   Int_t           rf_t;
+   Bool_t          ic_trig;
 
    // List of branches
    TBranch        *b_si_mul;   //!
@@ -61,7 +64,10 @@ public :
    TBranch        *b_pc_ch_left_e;   //!
    TBranch        *b_pc_ch_right_t;   //!
    TBranch        *b_pc_ch_left_t;   //!
-   TBranch        *b_ic_ch;   //!
+   TBranch        *b_ic_ch_e;   //!
+   TBranch        *b_ic_ch_t;   //!
+   TBranch        *b_rf_t;   //!
+   TBranch        *b_ic_trig;   //!
 
    EnergyAngle(TTree *tree=0);
    virtual ~EnergyAngle();
@@ -154,7 +160,10 @@ void EnergyAngle::Init(TTree *tree)
    fChain->SetBranchAddress("pc_ch_left_e", pc_ch_left_e, &b_pc_ch_left_e);
    fChain->SetBranchAddress("pc_ch_right_t", pc_ch_right_t, &b_pc_ch_right_t);
    fChain->SetBranchAddress("pc_ch_left_t", pc_ch_left_t, &b_pc_ch_left_t);
-   fChain->SetBranchAddress("ic_ch", &ic_ch, &b_ic_ch);
+   fChain->SetBranchAddress("ic_ch_e", &ic_ch_e, &b_ic_ch_e);
+   fChain->SetBranchAddress("ic_ch_t", &ic_ch_t, &b_ic_ch_t);
+   fChain->SetBranchAddress("rf_t", &rf_t, &b_rf_t);
+   fChain->SetBranchAddress("ic_trig", &ic_trig, &b_ic_trig);
    Notify();
 }
 

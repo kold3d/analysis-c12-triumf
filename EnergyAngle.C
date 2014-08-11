@@ -41,10 +41,23 @@ void EnergyAngle::Loop()
 
    Long64_t nentries = fChain->GetEntriesFast();
    Long64_t nbytes = 0, nb = 0;
+   char thisFullPath[256] = "";
+   int thisRunNumber = -1;
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
+
+      TFile* currentFile = fChain->GetCurrentFile();
+      if(strcmp(currentFile->GetName(),thisFullPath)!=0) {
+	sprintf(thisFullPath,"%s",currentFile->GetName());
+	std::string fullpath(thisFullPath);
+	std::string runString = fullpath.substr(fullpath.length()-13,3);
+	std::istringstream stm;
+	stm.str(runString);
+	stm >> thisRunNumber;
+	printf("Processing run number %d...\n",thisRunNumber);	
+      }      
       
       //Find legit hit in si_detector
       Int_t highSiEDet = -1;

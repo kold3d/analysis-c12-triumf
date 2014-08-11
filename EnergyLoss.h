@@ -10,6 +10,7 @@ class EnergyLoss : public TObject {
   EnergyLoss() : TObject() {};
   EnergyLoss(const char*, double);
 
+  void SetConversion(double);
   double CalcLoss(double,double);
   double AddBack(double,double);
   double CalcRemainder(double,double);
@@ -20,6 +21,7 @@ class EnergyLoss : public TObject {
  private:
   std::vector<double> energy_;
   std::vector<double> dEdx_;
+  std::vector<double> dEdx_no_norm_;
 
  public:
   ClassDef(EnergyLoss,0)
