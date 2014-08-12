@@ -86,6 +86,9 @@ public :
    Float_t         position[2];
    Float_t         sum_dE[2];
    Int_t           wire[2];
+   Int_t           rf_t;
+   Int_t           ic_ch_e;
+   Bool_t          ic_trig;
 
    // List of branches
    TBranch        *b_measured_energy;   //!
@@ -96,6 +99,9 @@ public :
    TBranch        *b_position;   //!
    TBranch        *b_sum_dE;   //!
    TBranch        *b_wire;   //!
+   TBranch        *b_rf_t;   //!
+   TBranch        *b_ic_ch_e;   //!
+   TBranch        *b_ic_trig;   //!
 
    Spectra(TTree *tree=0);
    virtual ~Spectra();
@@ -191,6 +197,9 @@ void Spectra::Init(TTree *tree)
    fChain->SetBranchAddress("position", position, &b_position);
    fChain->SetBranchAddress("sum_dE", sum_dE, &b_sum_dE);
    fChain->SetBranchAddress("wire", wire, &b_wire);
+   fChain->SetBranchAddress("rf_t", &rf_t, &b_rf_t);
+   fChain->SetBranchAddress("ic_ch_e", &ic_ch_e, &b_ic_ch_e);
+   fChain->SetBranchAddress("ic_trig", &ic_trig, &b_ic_trig);
    Notify();
 }
 

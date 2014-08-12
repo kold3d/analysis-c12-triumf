@@ -18,39 +18,41 @@ void Spectra::Loop(Float_t incoming, Bool_t draw, Bool_t exact)
 
   TFile* cutFile = TFile::Open("cuts.root");
   TCutG* cuts[8];
+  TCutG* rf_cut = (TCutG*) cutFile->Get("RF");
   for(int i = 0;i<8;i++) {
     cuts[i] = (TCutG*)cutFile->Get(Form("PROTONS_%d",i+1));
+    
   }
   cutFile->Close();
 
-  Int_t numBins = 50;
+  Int_t numBins = 60;
 
-  TH1F* s1 = new TH1F("s1","Forward Angles",numBins,0,3.);
+  TH1F* s1 = new TH1F("s1","Forward Angles",numBins,0,3.4);
   s1->Sumw2();
   s1->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
   s1->GetYaxis()->SetTitle("Yield [arb. units]");
   s1->GetYaxis()->SetTitleOffset(1.6);
-  TH1F* s2 = new TH1F("s2","First Ring",numBins,0,3.);
+  TH1F* s2 = new TH1F("s2","First Ring",numBins,0,3.4);
   s2->Sumw2();
   s2->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
   s2->GetYaxis()->SetTitle("Yield [arb. units]");
   s2->GetYaxis()->SetTitleOffset(1.6);
-  TH1F* s3 = new TH1F("s3","Second Ring",numBins,0,3.);
+  TH1F* s3 = new TH1F("s3","Second Ring",numBins,0,3.4);
   s3->Sumw2();
   s3->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
   s3->GetYaxis()->SetTitle("Yield [arb. units]");
   s3->GetYaxis()->SetTitleOffset(1.6);
-  TH1F* s4 = new TH1F("s4","Third Ring",numBins,0,3.);
+  TH1F* s4 = new TH1F("s4","Third Ring",numBins,0,3.4);
   s4->Sumw2();
   s4->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
   s4->GetYaxis()->SetTitle("Yield [arb. units]");
   s4->GetYaxis()->SetTitleOffset(1.6);
-  TH1F* s5 = new TH1F("s5","Fourth Ring",numBins,0,3.);
+  TH1F* s5 = new TH1F("s5","Fourth Ring",numBins,0,3.4);
   s5->Sumw2();
   s5->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
   s5->GetYaxis()->SetTitle("Yield [arb. units]");
   s5->GetYaxis()->SetTitleOffset(1.6);
-  TH1F* s6 = new TH1F("s6","Fifth Ring",numBins,0,3.);
+  TH1F* s6 = new TH1F("s6","Fifth Ring",numBins,0,3.4);
   s6->Sumw2();
   s6->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
   s6->GetYaxis()->SetTitle("Yield [arb. units]");
@@ -76,6 +78,8 @@ void Spectra::Loop(Float_t incoming, Bool_t draw, Bool_t exact)
 	h_no_pro->Fill(measured_energy);
 	continue;
       }
+      if(!rf_cut->IsInside(measured_energy,rf_t)) continue;
+      if(ic_ch_e<120||ic_ch_e>230) continue;
 
       Bool_t placed = false;
       std::pair<Float_t,Float_t> pc_bound = LookupPCBound(which,1,cm_energy[which]);
@@ -126,6 +130,8 @@ void Spectra::Loop(Float_t incoming, Bool_t draw, Bool_t exact)
      c1->cd(1);
    }
    DivideTargetThickness(s1);
+   printf("here!\n");
+
    if(!exact) CalcSolidAngleFast(s1,1);
    else CalcSolidAngleNorm(s1,1);
    if(draw) {
@@ -194,6 +200,7 @@ void Spectra::DivideTargetThickness(TH1F *f){
     binUpEdge *= (Calibrations::m1+Calibrations::m2)/Calibrations::m2; // From C.M. to Lab Frame
     Double_t binContent = f->GetBinContent(i);
     Double_t binError = f->GetBinError(i);
+    printf("%f  %f\n",binUpEdge,binLowEdge);
     Double_t delta_x = Calibrations::projectile->CalcRange(binUpEdge,binLowEdge);
     delta_x /= 10.0;
     Float_t molarMassMethane = 0.01604;
@@ -218,6 +225,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
     printf("Calculating solid angle for Region %d, Bin %d\n",region,i);
 
     Double_t binCenter = xaxis->GetBinCenter(i);
+    Double_t cmEnergy = binCenter;
     binCenter *=  (Calibrations::m1+Calibrations::m2)/Calibrations::m2;
     Double_t binContent = f->GetBinContent(i);
     if(binContent == 0.) continue;
@@ -229,60 +237,84 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
     if(region == 1) {
       for(Float_t dx = 0;dx<10.;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  h->Fill(angle);
-	  h2->Fill(180-2.*angle);
+	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
+	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
+	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
+	    h->Fill(angle);
+	    h2->Fill(180-2.*angle);
+	  }
 	}
       }
       sum*=2.;
     } else if(region == 2) {
       for(Float_t dx = 10.;dx<25.;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
+	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
+	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
 	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
-	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);
 	    h2->Fill(180-2.*angle);
+	  }
 	}
       }
       sum*=2.;
     } else if(region == 3) {
       for(Float_t dx = 35.96; dx< 48.46; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  h->Fill(angle);	  	    
-	  h2->Fill(180-2.*angle);
+	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
+	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
+	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
+	    h->Fill(angle);
+	    h2->Fill(180-2.*angle);
+	  }
 	}
       }
       sum*=2.;
     } else if(region == 4) {
       for(Float_t dx = 48.46; dx < 60.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  h->Fill(angle); 
-	  h2->Fill(180-2.*angle); 	    
+	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
+	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
+	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
+	    h->Fill(angle);
+	    h2->Fill(180-2.*angle);
+	  }
         }	
       }
       sum*=2.;
     } else if(region == 5) {
       for(Float_t dx = 60.96; dx< 73.46; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  h->Fill(angle);
-	  h2->Fill(180-2.*angle);
+	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
+	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
+	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
+	    h->Fill(angle);
+	    h2->Fill(180-2.*angle);
+	  }
 	}
       }
       sum*=2.;
     } else if(region == 6) {
       for(Float_t dx = 73.46; dx< 85.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  h->Fill(angle);	  	    
-	  h2->Fill(180-2.*angle);
+	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
+	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
+	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
+	    h->Fill(angle);
+	    h2->Fill(180-2.*angle);
+	  }
 	}
       }
       sum*=2.;
@@ -522,68 +554,94 @@ void Spectra::CalcSolidAngleTable(){
       TH1F* h = new TH1F(Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),360,0,180);
       Double_t depth =Calibrations::projectile->CalcRange(Calibrations::beam_energy,cmEnergy*(Calibrations::m1+Calibrations::m2)/Calibrations::m2);
       Double_t z = Calibrations::window_to_si-depth;
-      
 
     Float_t sum = 0.;
     if(region == 1) {
       for(Float_t dx = 0;dx<10.;dx+=elementSize) {
 	for(Float_t dy = -25;dy<25.;dy+=elementSize) {
-	  sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  h->Fill(angle);
+	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
+	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
+	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
+	    h->Fill(angle);
+	  }
 	}
       }
       sum*=2.;
     } else if(region == 2) {
       for(Float_t dx = 10.;dx<25.;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
+	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
+	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
+	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
+	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
 	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
-	    Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	    h->Fill(angle);
+	  }
 	}
       }
       sum*=2.;
     } else if(region == 3) {
       for(Float_t dx = 35.96; dx< 48.46; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  h->Fill(angle);	  	    
+	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
+	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
+	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
+	    h->Fill(angle);
+	  }
 	}
       }
       sum*=2.;
     } else if(region == 4) {
       for(Float_t dx = 48.46; dx < 60.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  h->Fill(angle); 
-        }	
+	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
+	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
+	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
+	    h->Fill(angle);
+	  }
+	}	
       }
       sum*=2.;
     } else if(region == 5) {
       for(Float_t dx = 60.96; dx< 73.46; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  h->Fill(angle);
+	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
+	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
+	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
+	    h->Fill(angle);
+	  }
 	}
       }
       sum*=2.;
     } else if(region == 6) {
       for(Float_t dx = 73.46; dx< 85.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  h->Fill(angle);	  	    
+	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
+	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
+	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
+	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
+	    h->Fill(angle);
+	  }
 	}
       }
       sum*=2.;
     } 
 
     Float_t change_bin_content = 4.*sum*cos(h->GetMean()*3.14159/180);
-      printf("Region: %d, CM Energy: %f, SolidAngle: %f, change_bin_content:%f\n",region,cmEnergy,sum,change_bin_content);
-      fprintf(out, "%d %f %f %f\n",region, cmEnergy,sum,change_bin_content);
+    printf("Region: %d, CM Energy: %f, SolidAngle: %f, change_bin_content:%f\n",region,cmEnergy,sum,change_bin_content);
+    fprintf(out, "%d %f %f %f\n",region, cmEnergy,sum,change_bin_content);
+
+    if(z>=Calibrations::window_to_si) break;
+
     }
   }
   fflush(out);

@@ -35,6 +35,9 @@ void EnergyAngle::Loop()
   outTree->Branch("position",position,"position[2]/F");
   outTree->Branch("sum_dE",sum_dE,"sum_dE[2]/F");
   outTree->Branch("wire",wire,"wire[2]/I");
+  outTree->Branch("rf_t",&rf_t,"rf_t/I");
+  outTree->Branch("ic_ch_e",&ic_ch_e,"ic_ch_e/I");
+  outTree->Branch("ic_trig",&ic_trig,"ic_trig/O");
 
   Int_t goodSi = 0, noPosition=0, noCMEnergy=0;
   Int_t numBelowPCThreshold= 0.;
@@ -95,7 +98,7 @@ void EnergyAngle::Loop()
       for(Int_t i = 0;i<pc_mul;i++) {
 	Float_t left = pc_ch_left_e[i];
 	Float_t right = pc_ch_right_e[i];
-	Calibrations::MatchPC(left,right,pc_wire[i]-1);
+	Calibrations::MatchPC(left,right,pc_wire[i]-1,thisRunNumber);
 	Float_t sum = left+right;
 	if( sum < Calibrations::sum_pc_threshold ) {
 	  continue;

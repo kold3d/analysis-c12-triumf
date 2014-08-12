@@ -130,6 +130,7 @@ void Calibrations::InitParameters() {
 	it2 != it1->second.end(); it2++) {
       it2->second.first /= sum[it2->first].first/entries[it2->first].first;
       it2->second.second /= sum[it2->first].second/entries[it2->first].second;
+      //printf("Run: %d Wire: %d Left: %f Right: %f\n",it1->first,it2->first+1,it2->second.first,it2->second.second);
     }
   }
 }
@@ -140,8 +141,10 @@ void Calibrations::MatchPC(Float_t& left, Float_t& right, Int_t wire, Int_t run)
   right = (right<120) ? right*wire_gain_diff_low[wire].second+wire_offset_low[wire].second :
     right*wire_gain_diff_high[wire].second+wire_offset_high[wire].second;
   if(run>0) {
-    left *= pc_run_gain[run][wire].first;
-    right *= pc_run_gain[run][wire].second;
+    if(pc_run_gain[run][wire].first>0.) left /= pc_run_gain[run][wire].first;
+    //else printf("Left wire has no run gain for run %d, wire %d\n",run,wire+1);
+    if(pc_run_gain[run][wire].second>0.) right /= pc_run_gain[run][wire].second;
+    //else printf("Right wire has no run gain for run %d, wire %d\n",run,wire+1);
   }
 }
 
