@@ -372,8 +372,8 @@ std::pair<Float_t,Float_t> Spectra::CalcPCBoundary(Int_t which, Int_t region, Fl
 	Double_t dist_wire = (which == 1) ? z_bound-Calibrations::anode_to_si-Calibrations::anode_sep : z_bound-Calibrations::anode_to_si;
 
 	Boundary wire_fixed_values[6];
-	wire_fixed_values[0] = Boundary(0.,10.);
-	wire_fixed_values[1] = Boundary(10.,25.);
+	wire_fixed_values[0] = Boundary(0.,6.);
+	wire_fixed_values[1] = Boundary(6.,25.);
 	wire_fixed_values[2] = Boundary(35.96,48.46);
 	wire_fixed_values[3] = Boundary(48.46,60.96);
 	wire_fixed_values[4] = Boundary(60.96,73.46);
@@ -557,7 +557,7 @@ void Spectra::CalcSolidAngleTable(){
 
     Float_t sum = 0.;
     if(region == 1) {
-      for(Float_t dx = 0;dx<10.;dx+=elementSize) {
+      for(Float_t dx = 0;dx<6.;dx+=elementSize) {
 	for(Float_t dy = -25;dy<25.;dy+=elementSize) {
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
@@ -570,7 +570,7 @@ void Spectra::CalcSolidAngleTable(){
       }
       sum*=2.;
     } else if(region == 2) {
-      for(Float_t dx = 10.;dx<25.;dx+=elementSize) {
+      for(Float_t dx = 6.;dx<25.;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
