@@ -1,5 +1,7 @@
 void CalcSpectra(TTree* tree,Float_t incoming) {
   gSystem->CompileMacro("EnergyLoss.C");
+  gSystem->CompileMacro("Calibrations.C");
+  Calibrations::InitParameters();
   gSystem->CompileMacro("EnergyAngle.C");
   EnergyAngle::ReadLookupTable();
   gSystem->CompileMacro("Spectra.C");
