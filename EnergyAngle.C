@@ -51,8 +51,7 @@ void EnergyAngle::Loop()
       Int_t highSiEQuad = -1;
       Float_t highSiE = 0;
       for(Int_t i =0;i<si_mul;i++) {
-	Float_t cal_e = si_ch_e[i]*Calibrations::si_cal[ si_det[i]-1][si_quad[i]-1].first + 
-	  Calibrations::si_cal[ si_det[i]-1][si_quad[i]-1].second;
+	Float_t cal_e = Calibrations::CalibrateSi(si_ch_e[i],si_det[i]-1,si_quad[i]-1); 
 	if(cal_e>highSiE) {
 	  highSiE = cal_e;
 	  highSiEDet = si_det[i];
@@ -82,7 +81,8 @@ void EnergyAngle::Loop()
       for(Int_t i = 0;i<pc_mul;i++) {
 	Float_t left = pc_ch_left_e[i];
 	Float_t right = pc_ch_right_e[i];
-	Calibrations::MatchPC(left,right,pc_wire[i]-1);
+	left = Calibrations::MatchPCLeft(left,pc_wire[i]-1);
+	right = Calibrations::MatchPCRight(right,pc_wire[i]-1);
 	Float_t sum = left+right;
 	if( sum < Calibrations::sum_pc_threshold ) {
 	  continue;
@@ -91,14 +91,14 @@ void EnergyAngle::Loop()
 	if(pc_wire[i] < 6) {
 	  if(sum > highEPCRear) {
 	    highEPCRear = sum;
-	    positionRear = CalcPosition(pc_wire[i]-1,left,right);
+	    positionRear = Calibrations::CalcPosition(pc_wire[i]-1,left,right);
 	    wireRear = pc_wire[i];
 	    goodRearPosition = true;
 	  }
 	} else {
 	  if(sum > highEPCFront) {
 	    highEPCFront = sum;
-	    positionFront = CalcPosition(pc_wire[i]-1,left,right);
+	    positionFront = Calibrations::CalcPosition(pc_wire[i]-1,left,right);
 	    wireFront = pc_wire[i];
 	    goodFrontPosition = true;
 	  }
@@ -165,14 +165,6 @@ void EnergyAngle::Loop()
    printf("Total Events: %d Below PC Threshold: %d No Position: %d No CM Energy %d\n",goodSi,numBelowPCThreshold,noPosition,noCMEnergy);   
 }
 
-Float_t EnergyAngle::CalcPosition(UChar_t wire, Float_t left_ch, Float_t right_ch) {
-  Float_t x = (right_ch-left_ch)/(right_ch+left_ch);
-  
-  Float_t pos = Calibrations::wire_pos_cal[wire].first*x+Calibrations::wire_pos_cal[wire].second;
-  
-  return pos;
-}
-
 std::pair<Float_t,Float_t> EnergyAngle::LookupCMEnergyAngle(UChar_t wire, Float_t x, Float_t protonEnergy) {
   Float_t newX = floor(10.*fabs(x)/5.)*5./10.;
   if(x-newX>=0.25) newX += 0.5;
@@ -236,7 +228,7 @@ std::pair<Float_t,Float_t> EnergyAngle::LookupCMEnergyAngle(UChar_t wire, Float_
 
 void EnergyAngle::ReadLookupTable() {
   table.clear();
-  std::ifstream in("tables/lookup_table.out");
+  std::ifstream in("lookup_table.out");
   std::string line;
   while(!in.eof()) {
     getline(in,line);
@@ -270,7 +262,7 @@ void EnergyAngle::CalcLookupTable() {
   };
   
   table.clear();
-  FILE* out = fopen("tables/lookup_table.out","w");
+  FILE* out = fopen("lookup_table.out","w");
   for(UChar_t wire = 0;wire<8;wire++) {
     if(wire==7) {
       table[wire]=table[5];

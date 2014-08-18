@@ -18,8 +18,8 @@ void Calibrations::InitParameters() {
   Float_t temperature = 295;  //In Kelvin, not used
 
   density = 9.95784e-05+7.20831e-07*pressure;  //From linear fit to energy dep
-  projectile = new EnergyLoss("tables/dEdx_carbon_methane_290K_400torr.dat",density*100.);
-  proton     = new EnergyLoss("tables/dEdx_proton_methane_290K_400torr.dat",density*100.);
+  projectile = new EnergyLoss("dEdx_carbon_methane_290K_400torr.dat",density*100.);
+  proton     = new EnergyLoss("dEdx_proton_methane_290K_400torr.dat",density*100.);
 
   //Gain intercept from channel to mV for channels < 120
   wire_offset_low[0] = std::pair<float,float>(-16.597237,-16.564661);
@@ -90,11 +90,29 @@ void Calibrations::InitParameters() {
   si_cal[2][3] = std::pair<Float_t,Float_t>(1.88828167671430,155.291004367064);
 }
 
-void Calibrations::MatchPC(Float_t& left, Float_t& right, Int_t wire) {
-  left = (left<120) ? left*wire_gain_diff_low[wire].first+wire_offset_low[wire].first :
+Float_t Calibrations::CalibrateSi(Float_t ch,Int_t detector, Int_t quadrant) {
+  std::pair<Float_t,Float_t> calib = si_cal[detector][quadrant];
+  return ch*calib.first+calib.second;
+}
+
+Float_t Calibrations::MatchPCLeft(Float_t left, Int_t wire) {
+  Float_t localLeft = (left<120) ? left*wire_gain_diff_low[wire].first+wire_offset_low[wire].first :
     left*wire_gain_diff_high[wire].first+wire_offset_high[wire].first;
-  right = (right<120) ? right*wire_gain_diff_low[wire].second+wire_offset_low[wire].second :
+  return localLeft;
+}
+
+Float_t Calibrations::MatchPCRight(Float_t right, Int_t wire) {
+  Float_t localRight = (right<120) ? right*wire_gain_diff_low[wire].second+wire_offset_low[wire].second :
     right*wire_gain_diff_high[wire].second+wire_offset_high[wire].second;
+  return localRight;
+}
+
+Float_t Calibrations::CalcPosition(UChar_t wire, Float_t left_ch, Float_t right_ch) {
+  Float_t x = (right_ch-left_ch)/(right_ch+left_ch);
+  
+  Float_t pos = wire_pos_cal[wire].first*x+wire_pos_cal[wire].second;
+  
+  return pos;
 }
 
 Float_t Calibrations::m1;

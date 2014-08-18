@@ -78,8 +78,6 @@ public :
    static std::pair<Float_t,Float_t> LookupCMEnergyAngle(UChar_t,Float_t,Float_t);
 
  private:
-   Float_t CalcPosition(UChar_t, Float_t, Float_t);
-
    static LookupTable table;
 };
 
