@@ -17,8 +17,8 @@ void CalcSpectraRMatrix(TTree* tree,Float_t incoming) {
   TFile * file = TFile::Open("energy_angle.root");
   TTree* energyAngle = (TTree*) file->Get("energyAngle");
   Spectra t2(energyAngle);
-  t2.Loop(incoming,false,true);
+  t2.Loop(incoming,false,false);
 
-  gSystem->Exec("./runRMatrix");
+  //gSystem->Exec("./runRMatrix");
   gROOT->ProcessLine(".X DrawSpectra.C");
 }

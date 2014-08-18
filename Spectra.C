@@ -310,7 +310,7 @@ void Spectra::CalcSolidAngleFast(TH1F* f, Int_t region) {
   Int_t i_size = f->GetSize();
   TAxis *xaxis = f->GetXaxis();
   for(Int_t i=1;i<i_size-1;i++){
-    printf("Calculating solid angle for Region %d, Bin %d\n",region,i);
+    //printf("Calculating solid angle for Region %d, Bin %d\n",region,i);
 
     Double_t binCenter = xaxis->GetBinCenter(i);
     Double_t binContent = f->GetBinContent(i);
@@ -411,7 +411,7 @@ std::pair<Float_t,Float_t> Spectra::LookupPCBound(Int_t which, Int_t region,Floa
 
 void Spectra::ReadPCBoundTable(){
   pctable.clear();
-  std::ifstream in("tables/pc_boundary_table.out");
+  std::ifstream in("pc_boundary_table.out");
   std::string line;
   while(!in.eof()){
     getline(in,line);
@@ -430,7 +430,7 @@ void Spectra::ReadPCBoundTable(){
 void Spectra::CalcPCBoundTable(){
   Spectra sp;
   pctable.clear();
-  FILE* out = fopen("tables/pc_boundary_table.out","w");
+  FILE* out = fopen("pc_boundary_table.out","w");
   std::pair<Float_t,Float_t> pc_bound;
   for(Int_t plane = 0;plane<2;plane++) {
     for(Int_t region = 1; region <= 6; region++){
@@ -496,7 +496,7 @@ Float_t Spectra::LookupSolidAngle(Int_t region,Float_t cmEnergy){
 
 void Spectra::ReadSolidAngleTable(){
   satable.clear();
-  std::ifstream in("tables/solid_angle_table.out");
+  std::ifstream in("solid_angle_table.out");
   std::string line;
   while(!in.eof()){
     getline(in,line);
@@ -515,7 +515,7 @@ void Spectra::ReadSolidAngleTable(){
 void Spectra::CalcSolidAngleTable(){
   Spectra sp;
   satable.clear();
-  FILE* out = fopen("tables/solid_angle_table.out","w");
+  FILE* out = fopen("solid_angle_table.out","w");
   Float_t elementSize = 1.;
   for(Int_t region = 1; region <= 6; region++){
     for(Double_t cmEnergy = 0.001; cmEnergy <= 5.0; cmEnergy+=0.1){
