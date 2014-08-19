@@ -68,7 +68,7 @@ void Spectra::Loop(Float_t incoming, Bool_t draw, Bool_t exact)
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
-      Int_t which;
+      Int_t which = 0;
       if(sum_dE[0]>0) which = 0;
       else if(sum_dE[1]>0) which = 1;
       else continue;
@@ -235,7 +235,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
     
     Float_t sum = 0.;
     if(region == 1) {
-      for(Float_t dx = 0;dx<10.;dx+=elementSize) {
+      for(Float_t dx = 0;dx<6.;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
@@ -249,7 +249,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       }
       sum*=2.;
     } else if(region == 2) {
-      for(Float_t dx = 10.;dx<25.;dx+=elementSize) {
+      for(Float_t dx = 6.;dx<25.;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
