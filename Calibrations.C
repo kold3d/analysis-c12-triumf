@@ -135,17 +135,23 @@ void Calibrations::InitParameters() {
   }
 }
 
-void Calibrations::MatchPC(Float_t& left, Float_t& right, Int_t wire, Int_t run) {
-  left = (left<120) ? left*wire_gain_diff_low[wire].first+wire_offset_low[wire].first :
+Float_t Calibrations::CalibrateSi(Float_t ch,Int_t detector, Int_t quadrant) {
+  std::pair<Float_t,Float_t> calib = si_cal[detector][quadrant];
+  return ch*calib.first+calib.second;
+}
+
+Float_t Calibrations::MatchPCLeft(Float_t left, Int_t wire, Int_t run) {
+  Float_t localLeft = (left<120) ? left*wire_gain_diff_low[wire].first+wire_offset_low[wire].first :
     left*wire_gain_diff_high[wire].first+wire_offset_high[wire].first;
-  right = (right<120) ? right*wire_gain_diff_low[wire].second+wire_offset_low[wire].second :
+  if(run>0&&pc_run_gain[run][wire].first>0.) localLeft /= pc_run_gain[run][wire].first;
+  return localLeft;
+}
+
+Float_t Calibrations::MatchPCRight(Float_t right, Int_t wire, Int_t run) {
+  Float_t localRight = (right<120) ? right*wire_gain_diff_low[wire].second+wire_offset_low[wire].second :
     right*wire_gain_diff_high[wire].second+wire_offset_high[wire].second;
-  if(run>0) {
-    if(pc_run_gain[run][wire].first>0.) left /= pc_run_gain[run][wire].first;
-    //else printf("Left wire has no run gain for run %d, wire %d\n",run,wire+1);
-    if(pc_run_gain[run][wire].second>0.) right /= pc_run_gain[run][wire].second;
-    //else printf("Right wire has no run gain for run %d, wire %d\n",run,wire+1);
-  }
+  if(run>0&&pc_run_gain[run][wire].second>0.) localRight /= pc_run_gain[run][wire].second;
+  return localRight;
 }
 
 void Calibrations::ScaleDensity(Float_t scaleFactor) {
@@ -153,6 +159,14 @@ void Calibrations::ScaleDensity(Float_t scaleFactor) {
   density *= scaleFactor;
   proton->SetConversion(density*100);
   projectile->SetConversion(density*100);
+}
+
+Float_t Calibrations::CalcPosition(UChar_t wire, Float_t left_ch, Float_t right_ch) {
+  Float_t x = (right_ch-left_ch)/(right_ch+left_ch);
+  
+  Float_t pos = wire_pos_cal[wire].first*x+wire_pos_cal[wire].second;
+  
+  return pos;
 }
 
 Float_t Calibrations::m1;

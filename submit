@@ -1,0 +1,1 @@
+/usr/local/spark/bin/spark-submit --master spark://cycdhcp22.tamu.edu:7077 --py-files python/functions.py python/main.py

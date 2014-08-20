@@ -9,8 +9,11 @@ class EnergyLoss;
 class Calibrations {
  public:
   static void InitParameters();
-  static void MatchPC(Float_t&,Float_t&,Int_t,Int_t run=-1);
   static void ScaleDensity(Float_t);
+  static Float_t  MatchPCLeft(Float_t,Int_t,Int_t);
+  static Float_t  MatchPCRight(Float_t,Int_t,Int_t);
+  static Float_t  CalibrateSi(Float_t,Int_t,Int_t);
+  static Float_t  CalcPosition(UChar_t,Float_t,Float_t);
 
   static Float_t m1;
   static Float_t m2;
