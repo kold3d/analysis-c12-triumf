@@ -42,8 +42,8 @@ def process_pc(data_string) :
 
 def process_energy_angle(raw) :
     event = dict()
-    si_data = raw.get("si")
-    pc_data = raw.get("pc")
+    si_data = raw.get("si-e")
+    pc_data = raw.get("pc-e")
     if si_data == None or pc_data == None : return event
     high_si_energy = 0.
     high_si_label = ''
@@ -78,13 +78,13 @@ def process_event(line) :
     #declare event dictionary
     event_dictionary = dict();
     #split event string
-    detector_list = line.split(';')
+    detector_list = line[1].split(';')
     #loop detectors, put processed object in dictionary
     for detector in detector_list :
         name_data_pair = detector.split('?')
         if name_data_pair[1] == '' : continue
-        elif name_data_pair[0] == 'si' : event_dictionary['si'] = process_si(name_data_pair[1])
-        elif name_data_pair[0] == 'pc' : event_dictionary['pc'] = process_pc(name_data_pair[1])
+        elif name_data_pair[0] == 'si-e' : event_dictionary['si-e'] = process_si(name_data_pair[1])
+        elif name_data_pair[0] == 'pc-e' : event_dictionary['pc-e'] = process_pc(name_data_pair[1])
     return event_dictionary
 
 def is_proton(event,p_cuts) :
