@@ -21,8 +21,8 @@ void Calibrations::InitParameters() {
   density_slope  = 7.20831e-07;
 
   density = density_offset+density_slope*pressure;  //From linear fit to energy dep
-  projectile = new EnergyLoss("tables/dedx_8he_methane.dat",density*100.);
-  proton     = new EnergyLoss("tables/dEdx_proton_methane_290K_400torr.dat",density*100.);
+  projectile = new EnergyLoss("dedx_8he_methane.dat",density*100.);
+  proton     = new EnergyLoss("dedx_proton_methane.dat",density*100.);
 
   //Gain intercept from channel to mV for channels < 120
   wire_offset_low[0] = std::pair<float,float>(-16.597237,-16.564661);
@@ -93,7 +93,7 @@ void Calibrations::InitParameters() {
   si_cal[2][3] = std::pair<Float_t,Float_t>(1.88828167671430,155.291004367064);
 
   //Read run by run corrections for PC
-  in.open("tables/wires_scaled_table.out");
+  in.open("wires_scaled_table.out");
   std::pair<Float_t,Float_t> sum[8];
   std::pair<Int_t,Int_t> entries[8];
   for(int i = 0;i<8;i++) {
