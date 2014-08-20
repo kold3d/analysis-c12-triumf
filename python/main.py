@@ -81,7 +81,10 @@ if __name__ == "__main__" :
     p_cuts = export_cuts(sc)
 
     #load event file
-    lines = sc.textFile("hdfs://cycdhcp22.tamu.edu:54310/data/c12_triumf_0714/carbon_triumf_*_ascii.txt")
+    #lines = sc.textFile("hdfs://cycdhcp22.tamu.edu:54310/data/c12_triumf_0714/carbon_triumf_*_ascii.txt")
+    lines = sc.newAPIHadoopFile("hdfs://cycdhcp22.tamu.edu:54310/data/c12_triumf_0714/carbon_triumf_*_t.txt.lzo",
+                                "com.hadoop.mapreduce.LzoTextInputFormat",
+                                "org.apache.hadoop.io.LongWritable","org.apache.hadoop.io.Text")
 
     #fill event dictionaries from ascii, find cm energies
     events = lines.map(lambda x : f.process_event(x))
