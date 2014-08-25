@@ -1,3 +1,4 @@
+import sys; sys.path.append('/opt/root/lib')
 import ROOT
 from pyspark import SparkFiles
 
@@ -17,51 +18,51 @@ class RootLoad :
     def __getattr__(self,name) :
         return getattr(self.instance_Libraries,name)
 
-def process_si(data_string) :
-    detector_dictionary = dict()
-    events = data_string.split(',')
-    for event in events :
-        label_value_pair = event.split(':')
-        ch_label = label_value_pair[0]
-        ch_value = float(label_value_pair[1])
-	cal_value = ROOT.Calibrations.CalibrateSi(ch_value,int(ch_label[0])-1,int(ch_label[2])-1)
-        if cal_value > 350. : detector_dictionary[ch_label]=cal_value      
-    return detector_dictionary
-    
-def process_pc(data_string,run) :
-    detector_dictionary = dict()
-    events = data_string.split(',')
-    for event in events :
-        label_value_pair = event.split(':')
-        ch_label = label_value_pair[0]
-        ch_value = float(label_value_pair[1])
-        cal_value = 0.
-        if ch_label[2] == 'l' : cal_value = ROOT.Calibrations.MatchPCLeft(ch_value,int(ch_label[0])-1,run)
-        elif ch_label[2] == 'r' : cal_value = ROOT.Calibrations.MatchPCRight(ch_value,int(ch_label[0])-1,run)
-        detector_dictionary[ch_label]=cal_value
-    return detector_dictionary
-
-def process_event(line) :
+def process_file(filename) :
     RootLoad()
-    #declare event dictionary
-    event_dictionary = dict();
-    #split event string
-    detector_list = line[1].split(';')
-    #loop detectors, put processed object in dictionary
-    name_data_pair = detector_list[0].split('?')
-    run = -1
-    if name_data_pair[0] != 'run' :
-        print "Data did not begin with run number!"
-        return event_dictionary
-    else : run = int(name_data_pair[1])
-    for detector in detector_list :
-        name_data_pair = detector.split('?')
-        if name_data_pair[1] == '' : continue
-        elif name_data_pair[0] == 'si-e' : event_dictionary['si-e'] = process_si(name_data_pair[1])
-        elif name_data_pair[0] == 'pc-e' : event_dictionary['pc-e'] = process_pc(name_data_pair[1],run)
-        elif name_data_pair[0] == 'rf-t' : event_dictionary['rf-t'] = int(name_data_pair[1])
-        elif name_data_pair[0] == 'ic-e' : event_dictionary['ic-e'] = int(name_data_pair[1])
-    return event_dictionary
+    #Extract run number
+    run = int(filename[1][-13:-10])
+    print "Opening run {0}".format(run)
+    #open root file, make new instance of EnergyAngle class
+    root_file = ROOT.THDFSFile(filename[1],"hdfs://cycdhcp22.tamu.edu:54310")
+    root_tree = root_file.Get("rawData")
+    print type(root_tree)
+    reader = ROOT.EnergyAngle(root_tree)
+    #loop tree, filling values in EnergyAngle
+    nentries = reader.fChain.GetEntriesFast()
+    event_list = list()
+    for jentry in range(0,nentries) :
+        ientry = reader.LoadTree(jentry)
+        if ientry < 0 : break
+        reader.fChain.GetEntry(jentry)
+        #declare event dictionary
+        if jentry % 100000 == 0 : 
+            print "Processed {0} events of {1}".format(jentry,nentries)
+        event_dictionary = dict();
+        if reader.si_mul > 0 :
+            si_dict = dict()
+            for i in range(0,ord(reader.si_mul)) :
+                det = ord(reader.si_det[i])
+                quad = ord(reader.si_quad[i])
+                cal_value = ROOT.Calibrations.CalibrateSi(reader.si_ch_e[i],det,quad)
+                if cal_value > 350 : 
+                    si_dict["{0}-{1}".format(det,quad)] = cal_value            
+            event_dictionary['si-e']=si_dict
+        if reader.pc_mul > 0 :
+            pc_dict = dict()
+            for i in range(0,ord(reader.pc_mul)) :
+                wire = ord(reader.pc_wire[i])
+                pc_dict["{0}-l".format(wire)]= \
+                  ROOT.Calibrations.MatchPCLeft(reader.pc_ch_left_e[i],wire,run)
+                pc_dict["{0}-r".format(wire)]= \
+                  ROOT.Calibrations.MatchPCRight(reader.pc_ch_right_e[i],wire,run)
+            event_dictionary['pc-e']=pc_dict
+        event_dictionary['rf-t'] = reader.rf_t
+        event_dictionary['ic-e'] = reader.ic_ch_e
+        if len(event_dictionary) > 0 : event_list.append(event_dictionary)
+    root_file.Close()
+    print "There are {0} entries in the event list.".format(len(event_list))
+    return event_list
 
 def process_raw(raw) :
     event = dict()

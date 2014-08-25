@@ -1,1 +1,1 @@
-/usr/local/spark-dev/bin/spark-submit  --driver-library-path /usr/local/hadoop-lzo/target/native/Linux-amd64-64/lib --driver-class-path /usr/local/hadoop-lzo/target/hadoop-lzo-0.4.20-SNAPSHOT.jar --master spark://cycdhcp22.tamu.edu:7077 --py-files python/functions.py python/main.py
+/usr/local/spark-dev/bin/spark-submit --master spark://cycdhcp22.tamu.edu:7077 --jars RootHadoop.jar --py-files python/functions.py python/main.py

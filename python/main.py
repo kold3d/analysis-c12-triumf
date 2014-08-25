@@ -56,7 +56,7 @@ if __name__ == "__main__" :
     scale_factor = 1.147e9;
     
     #setup cluster
-    sconf = SparkConf().setAppName("c1_triumf_analysis")
+    sconf = SparkConf().setAppName("he8_triumf_analysis")
     sc = SparkContext(conf=sconf)
    
     #build root libraries
@@ -82,13 +82,20 @@ if __name__ == "__main__" :
     #broadcast cuts to worker nodes
     cuts = export_cuts(sc)
 
-    #load event file
-    lines = sc.newAPIHadoopFile("hdfs://cycdhcp22.tamu.edu:54310/data/he8_triumf_0714/he8_triumf_*_t.txt.lzo",
-                                "com.hadoop.mapreduce.LzoTextInputFormat",
-                                "org.apache.hadoop.io.LongWritable","org.apache.hadoop.io.Text")
+    #comma sep run list
+    run_list  = "048,049,052,053,054,055,056,057,058,059,060,061,062,063,064,065,066,067,068,069,070,070,071,073,074,"
+    run_list += "075,076,077,078,079,080,081,082,083,084,085,087,088,089,090,091,092,093,094,095,097,098,100,101,"
+    run_list += "102,103,104,105,106,107,108"
 
-    #fill event dictionaries from ascii, process raw events, cut on protons
-    proton_events = lines.map(lambda x : f.process_event(x)).map(lambda x : f.process_raw(x)) \
+    file_name = "hdfs://cycdhcp22.tamu.edu:54310/data/he8_triumf_0714/he8_triumf_{{{0}}}001_t.root".format("048")
+    print file_name
+
+    #load event file, uses custom hadoop input format
+    lines = sc.newAPIHadoopFile(file_name,"edu.tamu.hadoop.RootInputFormat",
+                                "org.apache.hadoop.io.IntWritable","org.apache.hadoop.io.Text")
+
+    #fill event dictionaries from root file, process raw events, cut on protons
+    proton_events = lines.flatMap(lambda x : f.process_file(x)).map(lambda x : f.process_raw(x)) \
                          .filter(lambda x : f.is_proton(x,cuts.value))
 
     #lookup cm energy
