@@ -130,8 +130,6 @@ void Spectra::Loop(Float_t incoming, Bool_t draw, Bool_t exact)
      c1->cd(1);
    }
    DivideTargetThickness(s1);
-   printf("here!\n");
-
    if(!exact) CalcSolidAngleFast(s1,1);
    else CalcSolidAngleNorm(s1,1);
    if(draw) {
@@ -200,7 +198,6 @@ void Spectra::DivideTargetThickness(TH1F *f){
     binUpEdge *= (Calibrations::m1+Calibrations::m2)/Calibrations::m2; // From C.M. to Lab Frame
     Double_t binContent = f->GetBinContent(i);
     Double_t binError = f->GetBinError(i);
-    printf("%f  %f\n",binUpEdge,binLowEdge);
     Double_t delta_x = Calibrations::projectile->CalcRange(binUpEdge,binLowEdge);
     delta_x /= 10.0;
     Float_t molarMassMethane = 0.01604;

@@ -7,7 +7,7 @@ def fill_regions(events,scale_factor) :
     c = ROOT.TCanvas()
     c.Divide(3,2)
     s = list()
-    for i in range(1,7) : s.append(ROOT.TH1F("s{0}".format(i),"s{0}".format(i),100,0,3.))
+    for i in range(1,7) : s.append(ROOT.TH1F("s{0}".format(i),"s{0}".format(i),60,0,3.4))
     for event in events : 
         value = event.get("cm_energy")
         if value <= 0. : continue
@@ -38,21 +38,22 @@ def fill_regions(events,scale_factor) :
 #function opens cut files, reads them cuts, and broadcasts cuts to worker nodes
 def export_cuts(context) : 
     cuts_file = ROOT.TFile("cuts.root","read")
-    p_cuts = list()
-    p_cuts.append(cuts_file.Get("PROTONS_1"))
-    p_cuts.append(cuts_file.Get("PROTONS_2"))
-    p_cuts.append(cuts_file.Get("PROTONS_3"))
-    p_cuts.append(cuts_file.Get("PROTONS_4"))
-    p_cuts.append(cuts_file.Get("PROTONS_5"))
-    p_cuts.append(cuts_file.Get("PROTONS_6"))
-    p_cuts.append(cuts_file.Get("PROTONS_7"))
-    p_cuts.append(cuts_file.Get("PROTONS_8"))
+    cuts = list()
+    cuts.append(cuts_file.Get("PROTONS_1"))
+    cuts.append(cuts_file.Get("PROTONS_2"))
+    cuts.append(cuts_file.Get("PROTONS_3"))
+    cuts.append(cuts_file.Get("PROTONS_4"))
+    cuts.append(cuts_file.Get("PROTONS_5"))
+    cuts.append(cuts_file.Get("PROTONS_6"))
+    cuts.append(cuts_file.Get("PROTONS_7"))
+    cuts.append(cuts_file.Get("PROTONS_8"))
+    cuts.append(cuts_file.Get("RF"))
     cuts_file.Close()
-    return context.broadcast(p_cuts)
+    return context.broadcast(cuts)
 
 if __name__ == "__main__" :
     #scale factor for abs norm
-    scale_factor = 1.e10;
+    scale_factor = 1.147e9;
     
     #setup cluster
     sconf = SparkConf().setAppName("c1_triumf_analysis")
@@ -72,25 +73,27 @@ if __name__ == "__main__" :
     sc.addFile("EnergyLoss_C.so")
     sc.addFile("Calibrations_C.so")
     sc.addFile("EnergyAngle_C.so")
-    sc.addFile("dEdx_carbon_methane_290K_400torr.dat")
-    sc.addFile("dEdx_proton_methane_290K_400torr.dat")
+    sc.addFile("dedx_8he_havar.dat")
+    sc.addFile("dedx_8he_methane.dat")
     sc.addFile("lookup_table.out")
     sc.addFile("position_cal.txt")
+    sc.addFile("wires_scaled_table.out")
 
     #broadcast cuts to worker nodes
-    p_cuts = export_cuts(sc)
+    cuts = export_cuts(sc)
 
     #load event file
-    #lines = sc.textFile("hdfs://cycdhcp22.tamu.edu:54310/data/c12_triumf_0714/carbon_triumf_*_ascii.txt")
-    lines = sc.newAPIHadoopFile("hdfs://cycdhcp22.tamu.edu:54310/data/c12_triumf_0714/carbon_triumf_*_t.txt.lzo",
+    lines = sc.newAPIHadoopFile("hdfs://cycdhcp22.tamu.edu:54310/data/he8_triumf_0714/he8_triumf_*_t.txt.lzo",
                                 "com.hadoop.mapreduce.LzoTextInputFormat",
                                 "org.apache.hadoop.io.LongWritable","org.apache.hadoop.io.Text")
 
-    #fill event dictionaries from ascii, find cm energies
-    events = lines.map(lambda x : f.process_event(x))
-    ea_events = events.map(lambda x : f.process_energy_angle(x))
-    proton_ea_events = ea_events.filter(lambda x : f.is_proton(x,p_cuts.value)).collect()
+    #fill event dictionaries from ascii, process raw events, cut on protons
+    proton_events = lines.map(lambda x : f.process_event(x)).map(lambda x : f.process_raw(x)) \
+                         .filter(lambda x : f.is_proton(x,cuts.value))
+
+    #lookup cm energy
+    proton_events_cm = proton_events.map(lambda x : f.lookup_cm_energy(x)).collect()
 
     #fill root histogram
-    fill_regions(proton_ea_events,scale_factor)
+    fill_regions(proton_events_cm,scale_factor)
     

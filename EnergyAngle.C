@@ -186,7 +186,7 @@ std::pair<Float_t,Float_t> EnergyAngle::LookupCMEnergyAngle(UChar_t wire, Float_
   if(x-newX>=0.25) newX += 0.5;
 
   if(wire > 7 || wire < 0 || newX < 0. || newX > 80. ) {
-    printf("wire=%d x=%f out of Range.\n",wire,newX);
+    //printf("wire=%d x=%f out of Range.\n",wire,newX);
     return std::pair<Float_t,Float_t>(0.,0.);
   }
 
