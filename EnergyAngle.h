@@ -147,21 +147,37 @@ void EnergyAngle::Init(TTree *tree)
    fChain->SetMakeClass(1);
 
    fChain->SetBranchAddress("si_mul", &si_mul, &b_si_mul);
+   b_si_mul->SetAutoDelete();
    fChain->SetBranchAddress("si_det", si_det, &b_si_det);
+   b_si_det->SetAutoDelete();
    fChain->SetBranchAddress("si_quad", si_quad, &b_si_quad);
+   b_si_quad->SetAutoDelete();
    fChain->SetBranchAddress("si_ch_e", si_ch_e, &b_si_ch_e);
-   fChain->SetBranchAddress("si_cal_e", si_cal_e, &b_si_cal_e);
-   fChain->SetBranchAddress("si_ch_t", si_ch_t, &b_si_ch_t);
+   b_si_ch_e->SetAutoDelete();
+   //fChain->SetBranchAddress("si_cal_e", si_cal_e, &b_si_cal_e);
+   //b_si_cal_e->SetAutoDelete();
+   //fChain->SetBranchAddress("si_ch_t", si_ch_t, &b_si_ch_t);
+   //b_si_ch_t->SetAutoDelete();
    fChain->SetBranchAddress("pc_mul", &pc_mul, &b_pc_mul);
+   b_pc_mul->SetAutoDelete();
    fChain->SetBranchAddress("pc_wire", pc_wire, &b_pc_wire);
+   b_pc_wire->SetAutoDelete();
    fChain->SetBranchAddress("pc_ch_right_e", pc_ch_right_e, &b_pc_ch_right_e);
+   b_pc_ch_right_e->SetAutoDelete();
    fChain->SetBranchAddress("pc_ch_left_e", pc_ch_left_e, &b_pc_ch_left_e);
-   fChain->SetBranchAddress("pc_ch_right_t", pc_ch_right_t, &b_pc_ch_right_t);
-   fChain->SetBranchAddress("pc_ch_left_t", pc_ch_left_t, &b_pc_ch_left_t);
+   b_pc_ch_left_e->SetAutoDelete();
+   //fChain->SetBranchAddress("pc_ch_right_t", pc_ch_right_t, &b_pc_ch_right_t);
+   //b_pc_ch_right_t->SetAutoDelete();
+   //fChain->SetBranchAddress("pc_ch_left_t", pc_ch_left_t, &b_pc_ch_left_t);
+   //b_pc_ch_left_t->SetAutoDelete();
    fChain->SetBranchAddress("ic_ch_e", &ic_ch_e, &b_ic_ch_e);
-   fChain->SetBranchAddress("ic_ch_t", &ic_ch_t, &b_ic_ch_t);
+   b_ic_ch_e->SetAutoDelete();
+   //fChain->SetBranchAddress("ic_ch_t", &ic_ch_t, &b_ic_ch_t);
+   //b_ic_ch_t->SetAutoDelete();
    fChain->SetBranchAddress("rf_t", &rf_t, &b_rf_t);
-   fChain->SetBranchAddress("ic_trig", &ic_trig, &b_ic_trig);
+   b_rf_t->SetAutoDelete();
+   //fChain->SetBranchAddress("ic_trig", &ic_trig, &b_ic_trig);
+   //b_ic_trig->SetAutoDelete();
    Notify();
 }
 

@@ -26,12 +26,11 @@ def process_file(filename) :
     #open root file, make new instance of EnergyAngle class
     root_file = ROOT.THDFSFile(filename[1],"hdfs://cycdhcp22.tamu.edu:54310")
     root_tree = root_file.Get("rawData")
-    print type(root_tree)
     reader = ROOT.EnergyAngle(root_tree)
     #loop tree, filling values in EnergyAngle
     nentries = reader.fChain.GetEntriesFast()
     event_list = list()
-    for jentry in range(0,nentries) :
+    for jentry in xrange(0,nentries) :
         ientry = reader.LoadTree(jentry)
         if ientry < 0 : break
         reader.fChain.GetEntry(jentry)
@@ -39,18 +38,18 @@ def process_file(filename) :
         if jentry % 100000 == 0 : 
             print "Processed {0} events of {1}".format(jentry,nentries)
         event_dictionary = dict();
-        if reader.si_mul > 0 :
+        if ord(reader.si_mul) > 0 :
             si_dict = dict()
-            for i in range(0,ord(reader.si_mul)) :
+            for i in xrange(0,ord(reader.si_mul)) :
                 det = ord(reader.si_det[i])
                 quad = ord(reader.si_quad[i])
                 cal_value = ROOT.Calibrations.CalibrateSi(reader.si_ch_e[i],det,quad)
                 if cal_value > 350 : 
                     si_dict["{0}-{1}".format(det,quad)] = cal_value            
             event_dictionary['si-e']=si_dict
-        if reader.pc_mul > 0 :
+        if ord(reader.pc_mul) > 0 :
             pc_dict = dict()
-            for i in range(0,ord(reader.pc_mul)) :
+            for i in xrange(0,ord(reader.pc_mul)) :
                 wire = ord(reader.pc_wire[i])
                 pc_dict["{0}-l".format(wire)]= \
                   ROOT.Calibrations.MatchPCLeft(reader.pc_ch_left_e[i],wire,run)
@@ -80,7 +79,7 @@ def process_raw(raw) :
     high_pc_energy = 0.
     high_pc_position = 0.
     high_pc_wire = 0
-    for wire in range(1,9) :
+    for wire in xrange(1,9) :
         left_label = "{0}-l".format(wire)
         right_label = "{0}-r".format(wire)
         if pc_data.get(left_label) != None and pc_data.get(right_label) != None :

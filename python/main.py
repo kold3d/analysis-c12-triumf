@@ -1,4 +1,4 @@
-from pyspark import SparkFiles, SparkContext, SparkConf
+from pyspark import StorageLevel, SparkFiles, SparkContext, SparkConf
 import ROOT
 import functions as f
 
@@ -87,7 +87,7 @@ if __name__ == "__main__" :
     run_list += "075,076,077,078,079,080,081,082,083,084,085,087,088,089,090,091,092,093,094,095,097,098,100,101,"
     run_list += "102,103,104,105,106,107,108"
 
-    file_name = "hdfs://cycdhcp22.tamu.edu:54310/data/he8_triumf_0714/he8_triumf_{{{0}}}001_t.root".format("048")
+    file_name = "hdfs://cycdhcp22.tamu.edu:54310/data/he8_triumf_0714/he8_triumf_{{{0}}}001_t.root".format(run_list)
     print file_name
 
     #load event file, uses custom hadoop input format
@@ -95,7 +95,8 @@ if __name__ == "__main__" :
                                 "org.apache.hadoop.io.IntWritable","org.apache.hadoop.io.Text")
 
     #fill event dictionaries from root file, process raw events, cut on protons
-    proton_events = lines.flatMap(lambda x : f.process_file(x)).map(lambda x : f.process_raw(x)) \
+    proton_events = lines.flatMap(lambda x : f.process_file(x)) \
+                         .map(lambda x : f.process_raw(x)) \
                          .filter(lambda x : f.is_proton(x,cuts.value))
 
     #lookup cm energy
