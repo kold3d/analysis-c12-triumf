@@ -11,11 +11,12 @@
 #include <TRandom.h>
 #include "Calibrations.h"
 
-void Spectra::Loop(Float_t incoming, Bool_t draw, Bool_t exact)
-{
-   if (fChain == 0) return;
+#ifdef __CINT__
+#pragma link C++ class std::vector<GoodEvent>+;
+#endif
 
-
+std::vector<GoodEvent> Spectra::Loop()
+{    
   TFile* cutFile = TFile::Open("cuts.root");
   TCutG* cuts[8];
   TCutG* rf_cut = (TCutG*) cutFile->Get("RF");
@@ -24,167 +25,34 @@ void Spectra::Loop(Float_t incoming, Bool_t draw, Bool_t exact)
     
   }
   cutFile->Close();
-
-  Int_t numBins = 60;
-
-  TH1F* s1 = new TH1F("s1","Forward Angles",numBins,0,3.4);
-  s1->Sumw2();
-  s1->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
-  s1->GetYaxis()->SetTitle("Yield [arb. units]");
-  s1->GetYaxis()->SetTitleOffset(1.6);
-  TH1F* s2 = new TH1F("s2","First Ring",numBins,0,3.4);
-  s2->Sumw2();
-  s2->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
-  s2->GetYaxis()->SetTitle("Yield [arb. units]");
-  s2->GetYaxis()->SetTitleOffset(1.6);
-  TH1F* s3 = new TH1F("s3","Second Ring",numBins,0,3.4);
-  s3->Sumw2();
-  s3->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
-  s3->GetYaxis()->SetTitle("Yield [arb. units]");
-  s3->GetYaxis()->SetTitleOffset(1.6);
-  TH1F* s4 = new TH1F("s4","Third Ring",numBins,0,3.4);
-  s4->Sumw2();
-  s4->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
-  s4->GetYaxis()->SetTitle("Yield [arb. units]");
-  s4->GetYaxis()->SetTitleOffset(1.6);
-  TH1F* s5 = new TH1F("s5","Fourth Ring",numBins,0,3.4);
-  s5->Sumw2();
-  s5->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
-  s5->GetYaxis()->SetTitle("Yield [arb. units]");
-  s5->GetYaxis()->SetTitleOffset(1.6);
-  TH1F* s6 = new TH1F("s6","Fifth Ring",numBins,0,3.4);
-  s6->Sumw2();
-  s6->GetXaxis()->SetTitle("Center of Mass Energy [MeV]");
-  s6->GetYaxis()->SetTitle("Yield [arb. units]");
-  s6->GetYaxis()->SetTitleOffset(1.6);
-
-  TH1F* h_no_pro = new TH1F("h_no_pro","h_no_pro",400,0,12000);
   
-   Long64_t nentries = fChain->GetEntriesFast();
-
-   Long64_t nbytes = 0, nb = 0;
-   for (Long64_t jentry=0; jentry<nentries;jentry++) {
-      Long64_t ientry = LoadTree(jentry);
-      if (ientry < 0) break;
-      nb = fChain->GetEntry(jentry);   nbytes += nb;
-      // if (Cut(ientry) < 0) continue;
-      Int_t which = 0;
-      if(sum_dE[0]>0) which = 0;
-      else if(sum_dE[1]>0) which = 1;
-      else continue;
-
-      if(cm_energy[which] == 0.) continue;
-      if(!cuts[wire[which]-1]->IsInside(measured_energy,sum_dE[which])) {
-	h_no_pro->Fill(measured_energy);
-	continue;
-      }
-      if(!rf_cut->IsInside(measured_energy,rf_t)) continue;
-      if(ic_ch_e<120||ic_ch_e>230) continue;
-
-      Bool_t placed = false;
-      std::pair<Float_t,Float_t> pc_bound = LookupPCBound(which,1,cm_energy[which]);
-      if(detector == 2 && fabs(position[which]) < pc_bound.second && !placed) {
-	s1->Fill(cm_energy[which]);
-	placed = true;
-      }
-      
-      pc_bound = LookupPCBound(which,2,cm_energy[which]);
-      if(detector == 2 && fabs(position[which]) > pc_bound.first && !placed) {
-	s2->Fill(cm_energy[which]);
-	placed = true;
-      }
-      
-      pc_bound = LookupPCBound(which,3,cm_energy[which]);
-      if((detector == 3 || detector == 1) && 
-	 fabs(position[which]) < pc_bound.second && !placed) {
-	s3->Fill(cm_energy[which]);
-	placed = true;
-      }
-
-      pc_bound = LookupPCBound(which,4,cm_energy[which]);
-      if((detector == 3 || detector == 1) && 
-	 fabs(position[which]) > pc_bound.first && fabs(position[which]) < pc_bound.second && !placed) {
-	s4->Fill(cm_energy[which]);
-	placed = true;
-      }
-
-      pc_bound = LookupPCBound(which,5,cm_energy[which]);
-      if((detector == 3 || detector == 1) && 
-	 fabs(position[which]) > pc_bound.first && fabs(position[which]) < pc_bound.second && !placed) {
-	s5->Fill(cm_energy[which]);
-	placed = true;
-      }
-
-      pc_bound = LookupPCBound(which,6,cm_energy[which]);
-      if((detector == 3 || detector == 1) && 
-	 fabs(position[which]) > pc_bound.first && !placed) {
-	s6->Fill(cm_energy[which]);
-	placed = true;
-      }
-   }
-
-   TCanvas* c1;
-   if(draw) {
-     c1 = new TCanvas();
-     c1->Divide(3,2);
-     c1->cd(1);
-   }
-   DivideTargetThickness(s1);
-   if(!exact) CalcSolidAngleFast(s1,1);
-   else CalcSolidAngleNorm(s1,1);
-   if(draw) {
-     s1->Draw();
-     c1->cd(2); 
-   }
-   DivideTargetThickness(s2);
-   if(!exact) CalcSolidAngleFast(s2,2);
-   else CalcSolidAngleNorm(s2,2);
-   if(draw) {
-     s2->Draw();
-     c1->cd(3);
-   }
-   DivideTargetThickness(s3);
-   if(!exact) CalcSolidAngleFast(s3,3);
-   else CalcSolidAngleNorm(s3,3);
-   if(draw) {
-     s3->Draw();
-     c1->cd(4);
-   }
-   DivideTargetThickness(s4);
-   if(!exact) CalcSolidAngleFast(s4,4);
-   else CalcSolidAngleNorm(s4,4);
-   if(draw) {
-     s4->Draw();
-     c1->cd(5);
-   }
-   DivideTargetThickness(s5);
-   if(!exact) CalcSolidAngleFast(s5,5);
-   else CalcSolidAngleNorm(s5,5);
-   if(draw) {
-     s5->Draw();
-     c1->cd(6);
-   }
-   DivideTargetThickness(s6);
-   if(!exact) CalcSolidAngleFast(s6,6);
-   else CalcSolidAngleNorm(s6,6);
-   if(draw) s6->Draw();
-
-   
-   s1->Scale(1./incoming);
-   s2->Scale(1./incoming);
-   s3->Scale(1./incoming);
-   s4->Scale(1./incoming);
-   s5->Scale(1./incoming);
-   s6->Scale(1./incoming);
-
-   TFile* spec_file = new TFile("spectra.root","recreate");
-   s1->Write();
-   s2->Write();
-   s3->Write();
-   s4->Write();
-   s5->Write();
-   s6->Write();
-   spec_file->Close();
+  Int_t numBins = 60;
+  
+  
+  Long64_t nentries = fChain->GetEntriesFast();
+  
+  Long64_t nbytes = 0, nb = 0;
+  std::vector<GoodEvent> good_events;
+  for (Long64_t jentry=0; jentry<nentries;jentry++) {
+    Long64_t ientry = LoadTree(jentry);
+    if (ientry < 0) break;
+    nb = fChain->GetEntry(jentry);   nbytes += nb;
+    // if (Cut(ientry) < 0) continue;
+    Int_t which = 0;
+    if(sum_dE[0]>0) which = 0;
+    else if(sum_dE[1]>0) which = 1;
+    else continue;
+    
+    if(cm_energy[which] == 0.) continue;
+    if(!cuts[wire[which]-1]->IsInside(measured_energy,sum_dE[which])) {
+      continue;
+    }
+    if(!rf_cut->IsInside(measured_energy,rf_t)) continue;
+    if(ic_ch_e<120||ic_ch_e>230) continue;
+    GoodEvent thisEvent = {wire[which],quadrant,detector,position[which],cm_energy[which]};
+    good_events.push_back(thisEvent);
+  }
+  return good_events;
 }
 
 void Spectra::DivideTargetThickness(TH1F *f){    

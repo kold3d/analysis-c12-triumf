@@ -11,14 +11,14 @@
 
 LookupTable EnergyAngle::table;
 
-void EnergyAngle::Loop()
+void EnergyAngle::Loop(Int_t index_number)
 {
   if (fChain == 0) return;
 
   Float_t measured_energy,cm_energy[2],lab_angle[2],position[2],sum_dE[2];
   Int_t detector,quadrant,wire[2];
 
-  TFile* file = new TFile("energy_angle.root","recreate");
+  TFile* file = new TFile(Form("energy_angle_%d.root",index_number),"recreate");
 
   TH2F* dE_E[8];
   for(Int_t i = 0;i<8;i++) {

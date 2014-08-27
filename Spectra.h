@@ -32,6 +32,14 @@ typedef struct SolidAngleEntry {
 } SolidAngleEntry;
 typedef std::map<int,std::vector<SolidAngleEntry> > SolidAngleTable;
 
+struct GoodEvent {
+  Int_t wire;
+  Int_t quadrant;
+  Int_t detector;
+  Float_t position;
+  Float_t cm_energy;
+};
+
 typedef struct Vect3d {
   Float_t x;
   Float_t y;
@@ -109,7 +117,7 @@ public :
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
-   virtual void     Loop(Float_t,Bool_t draw=true, Bool_t exact=false);
+   virtual std::vector<GoodEvent> Loop();
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 

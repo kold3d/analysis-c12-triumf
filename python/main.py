@@ -35,22 +35,6 @@ def fill_regions(events,scale_factor) :
     c.Write()
     out_file.Close()
 
-#function opens cut files, reads them cuts, and broadcasts cuts to worker nodes
-def export_cuts(context) : 
-    cuts_file = ROOT.TFile("cuts.root","read")
-    cuts = list()
-    cuts.append(cuts_file.Get("PROTONS_1"))
-    cuts.append(cuts_file.Get("PROTONS_2"))
-    cuts.append(cuts_file.Get("PROTONS_3"))
-    cuts.append(cuts_file.Get("PROTONS_4"))
-    cuts.append(cuts_file.Get("PROTONS_5"))
-    cuts.append(cuts_file.Get("PROTONS_6"))
-    cuts.append(cuts_file.Get("PROTONS_7"))
-    cuts.append(cuts_file.Get("PROTONS_8"))
-    cuts.append(cuts_file.Get("RF"))
-    cuts_file.Close()
-    return context.broadcast(cuts)
-
 if __name__ == "__main__" :
     #scale factor for abs norm
     scale_factor = 1.147e9;
@@ -73,14 +57,15 @@ if __name__ == "__main__" :
     sc.addFile("EnergyLoss_C.so")
     sc.addFile("Calibrations_C.so")
     sc.addFile("EnergyAngle_C.so")
+    sc.addFile("Spectra_C.so")
+    sc.addFile("cuts.root")
     sc.addFile("dedx_8he_havar.dat")
     sc.addFile("dedx_8he_methane.dat")
     sc.addFile("lookup_table.out")
     sc.addFile("position_cal.txt")
     sc.addFile("wires_scaled_table.out")
+    
 
-    #broadcast cuts to worker nodes
-    cuts = export_cuts(sc)
 
     #comma sep run list
     run_list  = "048,049,052,053,054,055,056,057,058,059,060,061,062,063,064,065,066,067,068,069,070,070,071,073,074,"
@@ -95,12 +80,8 @@ if __name__ == "__main__" :
                                 "org.apache.hadoop.io.IntWritable","org.apache.hadoop.io.Text")
 
     #fill event dictionaries from root file, process raw events, cut on protons
-    proton_events = lines.flatMap(lambda x : f.process_file(x)) \
-                         .map(lambda x : f.process_raw(x)) \
-                         .filter(lambda x : f.is_proton(x,cuts.value))
-
-    #lookup cm energy
-    proton_events_cm = proton_events.map(lambda x : f.lookup_cm_energy(x)).collect()
+    proton_events_cm = lines.mapPartitionsWithIndex(f.process_energy_angle) \
+                            .flatMap(lambda x : f.get_scattering_events(x)).collect()
 
     #fill root histogram
     fill_regions(proton_events_cm,scale_factor)
