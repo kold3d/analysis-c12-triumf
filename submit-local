@@ -1,0 +1,1 @@
+/usr/local/spark-dev/bin/spark-submit  --master local --jars RootHadoop.jar --py-files python/functions.py python/main.py
