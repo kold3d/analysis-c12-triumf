@@ -1,0 +1,2 @@
+PYTHONPATH=$PYTHONPATH:./python
+pyspark  --master spark://cycdhcp22.tamu.edu:7077 --jars RootHadoop.jar --py-files python/shell_worker.py 

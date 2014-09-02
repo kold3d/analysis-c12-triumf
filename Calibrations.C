@@ -14,7 +14,7 @@ void Calibrations::InitParameters() {
   anode_sep        = 12.5 ;   //Distance from one anode to the next
   window_to_si     = 513. ;   //Distance from entrance window to si detectors
 
-  pressure            = 1010; //In torr
+  pressure            = 990; //In torr
   Float_t temperature = 295;  //In Kelvin, not used
 
   density_offset = 9.95784e-05;

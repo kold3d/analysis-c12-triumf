@@ -100,7 +100,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
     
     Float_t sum = 0.;
     if(region == 1) {
-      for(Float_t dx = 0;dx<6.;dx+=elementSize) {
+      for(Float_t dx = 0.;dx<25.;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
@@ -114,7 +114,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       }
       sum*=2.;
     } else if(region == 2) {
-      for(Float_t dx = 6.;dx<25.;dx+=elementSize) {
+      for(Float_t dx = 35.96; dx< 60.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
@@ -128,21 +128,7 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
       }
       sum*=2.;
     } else if(region == 3) {
-      for(Float_t dx = 35.96; dx< 48.46; dx+=elementSize) {
-	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
-	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
-	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
-	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
-	    h->Fill(angle);
-	    h2->Fill(180-2.*angle);
-	  }
-	}
-      }
-      sum*=2.;
-    } else if(region == 4) {
-      for(Float_t dx = 48.46; dx < 60.96; dx+=elementSize) {
+      for(Float_t dx = 60.96; dx < 85.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
@@ -153,34 +139,6 @@ void Spectra::CalcSolidAngleNorm(TH1F* f, Int_t region) {
 	    h2->Fill(180-2.*angle);
 	  }
         }	
-      }
-      sum*=2.;
-    } else if(region == 5) {
-      for(Float_t dx = 60.96; dx< 73.46; dx+=elementSize) {
-	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
-	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
-	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
-	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
-	    h->Fill(angle);
-	    h2->Fill(180-2.*angle);
-	  }
-	}
-      }
-      sum*=2.;
-    } else if(region == 6) {
-      for(Float_t dx = 73.46; dx< 85.96; dx+=elementSize) {
-	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
-	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
-	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
-	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
-	    h->Fill(angle);
-	    h2->Fill(180-2.*angle);
-	  }
-	}
       }
       sum*=2.;
     } 
@@ -330,7 +288,7 @@ void Spectra::CalcPCBoundTable(){
   FILE* out = fopen("pc_boundary_table.out","w");
   std::pair<Float_t,Float_t> pc_bound;
   for(Int_t plane = 0;plane<2;plane++) {
-    for(Int_t region = 1; region <= 6; region++){
+    for(Int_t region = 1; region <= 3; region++){
       for(Double_t cmEnergy = 0.001; cmEnergy <= 5.0; cmEnergy+=0.01){
 	pc_bound = sp.CalcPCBoundary(plane,region,cmEnergy);
 	printf("Plane: %d Region: %d, CM Energy: %f, Left Boundary: %f, Right Boundary: %f\n",plane,region, cmEnergy,pc_bound.first,pc_bound.second);
@@ -414,7 +372,7 @@ void Spectra::CalcSolidAngleTable(){
   satable.clear();
   FILE* out = fopen("solid_angle_table.out","w");
   Float_t elementSize = 1.;
-  for(Int_t region = 1; region <= 6; region++){
+  for(Int_t region = 1; region <= 3; region++){
     for(Double_t cmEnergy = 0.001; cmEnergy <= 5.0; cmEnergy+=0.1){
       TH1F* h = new TH1F(Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),Form("region_%d_cmEnergy_%f_lab_ik",region,cmEnergy),360,0,180);
       Double_t depth =Calibrations::projectile->CalcRange(Calibrations::beam_energy,cmEnergy*(Calibrations::m1+Calibrations::m2)/Calibrations::m2);
@@ -422,7 +380,7 @@ void Spectra::CalcSolidAngleTable(){
 
     Float_t sum = 0.;
     if(region == 1) {
-      for(Float_t dx = 0;dx<6.;dx+=elementSize) {
+      for(Float_t dx = 0.;dx<25.;dx+=elementSize) {
 	for(Float_t dy = -25;dy<25.;dy+=elementSize) {
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
@@ -435,7 +393,7 @@ void Spectra::CalcSolidAngleTable(){
       }
       sum*=2.;
     } else if(region == 2) {
-      for(Float_t dx = 6.;dx<25.;dx+=elementSize) {
+      for(Float_t dx = 35.96;dx<60.96;dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
@@ -448,7 +406,7 @@ void Spectra::CalcSolidAngleTable(){
       }
       sum*=2.;
     } else if(region == 3) {
-      for(Float_t dx = 35.96; dx< 48.46; dx+=elementSize) {
+      for(Float_t dx = 60.96; dx< 85.96; dx+=elementSize) {
 	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
 	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
 	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
@@ -460,46 +418,7 @@ void Spectra::CalcSolidAngleTable(){
 	}
       }
       sum*=2.;
-    } else if(region == 4) {
-      for(Float_t dx = 48.46; dx < 60.96; dx+=elementSize) {
-	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
-	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
-	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
-	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
-	    h->Fill(angle);
-	  }
-	}	
-      }
-      sum*=2.;
-    } else if(region == 5) {
-      for(Float_t dx = 60.96; dx< 73.46; dx+=elementSize) {
-	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
-	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
-	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
-	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
-	    h->Fill(angle);
-	  }
-	}
-      }
-      sum*=2.;
-    } else if(region == 6) {
-      for(Float_t dx = 73.46; dx< 85.96; dx+=elementSize) {
-	for(Float_t dy = -25.;dy<25.;dy+=elementSize) {
-	  Float_t angle = acos(z/sqrt(dx*dx+dy*dy+z*z))/3.14159*180;
-	  Float_t protonEnergy = 4.*Calibrations::m1/(Calibrations::m1+Calibrations::m2)*z*z/(dx*dx+dy*dy+z*z)*cmEnergy;
-	  Float_t range = Calibrations::proton->CalcRange(protonEnergy,0);
-	  if(range>=sqrt(dx*dx+dy*dy+z*z)) {
-	    sum+=elementSize*elementSize*z/pow(dx*dx+dy*dy+z*z,1.5);
-	    h->Fill(angle);
-	  }
-	}
-      }
-      sum*=2.;
-    } 
+    }  
 
     Float_t change_bin_content = 4.*sum*cos(h->GetMean()*3.14159/180);
     printf("Region: %d, CM Energy: %f, SolidAngle: %f, change_bin_content:%f\n",region,cmEnergy,sum,change_bin_content);

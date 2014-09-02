@@ -28,7 +28,7 @@ def process_energy_angle(index,iterat) :
     run = int(filename[1][-13:-10])
     print "Opening run {0}".format(run)
     #open root file, make new instance of EnergyAngle class
-    root_file = ROOT.THDFSFile(filename[1],"hdfs://cycdhcp22.tamu.edu:54310")
+    root_file = ROOT.THDFSFile(filename[1])
     root_tree = root_file.Get("rawData")
     reader = ROOT.EnergyAngle(root_tree)
     #loop tree, filling values in EnergyAngle
