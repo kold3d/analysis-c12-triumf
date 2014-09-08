@@ -4,11 +4,8 @@ import functions as f
 from runlist import file_name
 
 def fill_regions(events,scale_factor) :
-    out_file = ROOT.TFile("cluster_out.root","recreate")
-    c = ROOT.TCanvas()
-    c.Divide(1,3)
     s = list()
-    for i in range(1,4) : s.append(ROOT.TH1F("s{0}".format(i),"s{0}".format(i),60,0,3.4))
+    for i in range(1,4) : s.append(ROOT.TH1F("s{0}".format(i),"s{0}".format(i),70,0,3.4))
     for event in events : 
         value = event.get("cm_energy")
         if value <= 0. : continue
@@ -19,6 +16,9 @@ def fill_regions(events,scale_factor) :
                  (label[0]=='1' and (label[2]=='1' or label[2]=='3')) : s[1].Fill(value)
             elif (label[0]=='3' and (label[2]=='1' or label[2]=='3')) or \
                  (label[0]=='1' and (label[2]=='2' or label[2]=='4')) : s[2].Fill(value)
+    out_file = ROOT.TFile("cluster_out.root","recreate")
+    c = ROOT.TCanvas()
+    c.Divide(1,3)
     for i in range(1,4) :
         c.cd(i)
         ROOT.Spectra.DivideTargetThickness(s[i-1])
@@ -30,7 +30,7 @@ def fill_regions(events,scale_factor) :
 
 if __name__ == "__main__" :
     #scale factor for abs norm
-    scale_factor = 1.147e9;
+    scale_factor = 1.162066e9;
     
     #setup cluster
     sconf = SparkConf().setAppName("he8_triumf_analysis")

@@ -48,7 +48,7 @@ std::vector<GoodEvent> Spectra::Loop()
       continue;
     }
     if(!rf_cut->IsInside(measured_energy,rf_t)) continue;
-    if(ic_ch_e<120||ic_ch_e>230) continue;
+    if(ic_ch_e<120||ic_ch_e>300) continue;
     GoodEvent thisEvent = {wire[which],quadrant,detector,position[which],cm_energy[which]};
     good_events.push_back(thisEvent);
   }

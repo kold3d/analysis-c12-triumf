@@ -293,23 +293,23 @@ void EnergyAngle::CalcLookupTable() {
     
     for(Float_t x=0.;x<=80.;x+=0.5) {
       for(Float_t E = Calibrations::beam_energy;E>0.;E-=deltaBeamE) {
-	double range = Calibrations::projectile->CalcRange(Calibrations::beam_energy,E);
-	double pointToWire = (wire<5) ? distanceToSecondWire-range :
+	Float_t range = Calibrations::projectile->CalcRange(Calibrations::beam_energy,E);
+	Float_t pointToWire = (wire<5) ? distanceToSecondWire-range :
 	  distanceToFirstWire-range;
-	double distance0 = sqrt(pointToWire*pointToWire+x*x);
-	double distance1 = sqrt(wireHeight[wire]*wireHeight[wire]+
+	Float_t distance0 = sqrt(pointToWire*pointToWire+x*x);
+	Float_t distance1 = sqrt(wireHeight[wire]*wireHeight[wire]+
 				distance0*distance0);
 
-	double r = (distanceToSiDets-range)*distance1/pointToWire;
-	double angle = acos((distanceToSiDets-range)/r)*180/M_PI;
+	Float_t r = (distanceToSiDets-range)*distance1/pointToWire;
+	Float_t angle = acos((distanceToSiDets-range)/r)*180/M_PI;
 	
-	double protonEmissionEnergy = 4.*Calibrations::m1*Calibrations::m2/(Calibrations::m1+Calibrations::m2)/
+	Float_t protonEmissionEnergy = 4.*Calibrations::m1*Calibrations::m2/(Calibrations::m1+Calibrations::m2)/
 	  (Calibrations::m1+Calibrations::m2)*(distanceToSiDets-range)/r*(distanceToSiDets-range)/r*E;
-	double protonEnergy = Calibrations::proton->CalcRemainder(protonEmissionEnergy,r);
+	Float_t protonEnergy = Calibrations::proton->CalcRemainder(protonEmissionEnergy,r);
 
 	if(protonEnergy<0.005) break;
 
-	double cmEnergy = Calibrations::m2/(Calibrations::m1+Calibrations::m2)*E;
+	Float_t cmEnergy = Calibrations::m2/(Calibrations::m1+Calibrations::m2)*E;
 
 	LookupEntry entry = {range,r,angle,cmEnergy,protonEnergy};
 	table[wire][x].push_back(entry);
