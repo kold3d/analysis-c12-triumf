@@ -72,8 +72,8 @@ double EnergyLoss::CalcRemainder(double initialEnergy, double distance) {
       dist_init += 0.05;
     }
     else{ // For the Havar
-      beam_e = CompSimpSub(f,beam_e,0.0,0.00004,160);
-      dist_init += 0.00004;
+      beam_e = CompSimpSub(f,beam_e,0.0,0.00001,160);
+      dist_init += 0.00001;
     }
   }
 
@@ -110,8 +110,8 @@ double EnergyLoss::AddBack(double initialEnergy, double distance) {
       dist_init += 0.05;
     }
     else{ // For the Havar
-      initialEnergy = CompSimpAdd(f,initialEnergy,0.0,0.00004,160);
-      dist_init += 0.00004;
+      initialEnergy = CompSimpAdd(f,initialEnergy,0.0,0.00001,160);
+      dist_init += 0.00001;
     }
   }
 
@@ -149,8 +149,8 @@ double EnergyLoss::CalcRange(double initialEnergy, double remainder) {
       dist_init += 0.05;
     }
     else{ // For the Havar
-      beam_e = CompSimpSub(f,beam_e,0.0,0.00004,160);
-      dist_init += 0.00004;
+      beam_e = CompSimpSub(f,beam_e,0.0,0.00001,160);
+      dist_init += 0.00001;
     }
   }
 

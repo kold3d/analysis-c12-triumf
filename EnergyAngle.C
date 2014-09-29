@@ -306,6 +306,8 @@ void EnergyAngle::CalcLookupTable() {
 	Float_t protonEmissionEnergy = 4.*Calibrations::m1*Calibrations::m2/(Calibrations::m1+Calibrations::m2)/
 	  (Calibrations::m1+Calibrations::m2)*(distanceToSiDets-range)/r*(distanceToSiDets-range)/r*E;
 	Float_t protonEnergy = Calibrations::proton->CalcRemainder(protonEmissionEnergy,r);
+        protonEnergy = Calibrations::proton_aluminum->CalcRemainder(protonEnergy,0.0005/cos(angle*M_PI/180.0));
+        protonEnergy = Calibrations::proton_silicon->CalcRemainder(protonEnergy,0.0005/cos(angle*M_PI/180.0));
 
 	if(protonEnergy<0.005) break;
 

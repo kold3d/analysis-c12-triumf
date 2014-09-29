@@ -26,6 +26,8 @@ class Calibrations {
   static Float_t density;
   static EnergyLoss* projectile;
   static EnergyLoss* proton;
+  static EnergyLoss* proton_aluminum;
+  static EnergyLoss* proton_silicon;
   static Float_t anode_to_si;
   static Float_t anode_sep;
   static Float_t window_to_si;

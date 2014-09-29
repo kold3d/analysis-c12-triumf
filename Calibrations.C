@@ -23,7 +23,8 @@ void Calibrations::InitParameters() {
   density = density_offset+density_slope*pressure;  //From linear fit to energy dep
   projectile = new EnergyLoss("dedx_8he_methane.dat",density*100.);
   proton     = new EnergyLoss("dedx_proton_methane.dat",density*100.);
-
+  proton_aluminum = new EnergyLoss("dedx_proton_aluminum.dat",2.3211E2);
+  proton_silicon = new EnergyLoss("dedx_proton_silicon.dat",2.7019E2);
   //Gain intercept from channel to mV for channels < 120
   wire_offset_low[0] = std::pair<float,float>(-16.597237,-16.564661);
   wire_offset_low[1] = std::pair<float,float>(-19.425051,-17.123547);
@@ -78,19 +79,18 @@ void Calibrations::InitParameters() {
   }
   in.close();
 
-  //New si Energy calibration
-  si_cal[0][0] = std::pair<Float_t,Float_t>(1.85660280260919,145.765962067280);
-  si_cal[0][1] = std::pair<Float_t,Float_t>(1.90379631725431,129.419656625576);
-  si_cal[0][2] = std::pair<Float_t,Float_t>(1.87854910481639,135.518280441151);
-  si_cal[0][3] = std::pair<Float_t,Float_t>(1.92133095877702,157.401201770548);
-  si_cal[1][0] = std::pair<Float_t,Float_t>(1.81731779514392,120.443559621123);
-  si_cal[1][1] = std::pair<Float_t,Float_t>(1.90855965596577,119.093782917867);
-  si_cal[1][2] = std::pair<Float_t,Float_t>(1.87882230561214,135.559631886550);
-  si_cal[1][3] = std::pair<Float_t,Float_t>(1.89393626000964,129.916019810436);
-  si_cal[2][0] = std::pair<Float_t,Float_t>(1.81833034732690,145.356790789386);
-  si_cal[2][1] = std::pair<Float_t,Float_t>(1.86496555662152,132.646141278295);
-  si_cal[2][2] = std::pair<Float_t,Float_t>(1.87315964529692,142.573229493874);
-  si_cal[2][3] = std::pair<Float_t,Float_t>(1.88828167671430,155.291004367064);
+  si_cal[0][0] = std::pair<Float_t,Float_t>(1.9012190714,-127.8103431249);
+  si_cal[0][1] = std::pair<Float_t,Float_t>(1.9495421417,-144.5380724261);
+  si_cal[0][2] = std::pair<Float_t,Float_t>(1.9236917330,-138.3016685913);
+  si_cal[0][3] = std::pair<Float_t,Float_t>(1.9674987331,-115.8856796064);
+  si_cal[1][0] = std::pair<Float_t,Float_t>(1.8609848713,-153.7278107085);
+  si_cal[1][1] = std::pair<Float_t,Float_t>(1.9544200208,-155.1122721806);
+  si_cal[1][2] = std::pair<Float_t,Float_t>(1.9239685413,-138.2518396519);
+  si_cal[1][3] = std::pair<Float_t,Float_t>(1.9394490857,-144.0396486743);
+  si_cal[2][0] = std::pair<Float_t,Float_t>(1.8620282481,-128.2329020587);
+  si_cal[2][1] = std::pair<Float_t,Float_t>(1.9097857150,-141.2529042250);
+  si_cal[2][2] = std::pair<Float_t,Float_t>(1.9181770423,-131.0880331551);
+  si_cal[2][3] = std::pair<Float_t,Float_t>(1.9336643926,-118.0693601288);
 
   //Read run by run corrections for PC
   in.open("wires_scaled_table.out");
@@ -180,6 +180,8 @@ Float_t Calibrations::density_slope;
 Float_t Calibrations::density;
 EnergyLoss* Calibrations::projectile;
 EnergyLoss* Calibrations::proton;
+EnergyLoss* Calibrations::proton_aluminum;
+EnergyLoss* Calibrations::proton_silicon;
 Float_t Calibrations::anode_to_si;
 Float_t Calibrations::anode_sep;
 Float_t Calibrations::window_to_si;
