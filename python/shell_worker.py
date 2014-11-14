@@ -17,5 +17,5 @@ def select_hist_1d(command,conditions,binsx,lowx,highx,filename) :
     return select_hist(new_command,conditions,filename)
 
 def select_hist_2d(command,conditions,binsx,lowx,highx,binsy,lowy,highy,filename) :
-    new_command = "{0}>>h({1},{2},{3},{4},{5},{6})".format(command,binsy,lowy,highy,binsx,lowx,highx)
+    new_command = "{0}>>h({1},{2},{3},{4},{5},{6})".format(command,binsx,lowx,highx,binsy,lowy,highy)
     return select_hist(new_command,conditions,filename)

@@ -42,7 +42,7 @@ void PosCal::Loop()
   centers[5][5]=-1*centers[0][0];
   for(int i = 6; i<8; i++) {
     for(int j = 0;j<6;j++) {
-      centers[i][j]=centers[0][j];
+      centers[i][j]=centers[5][j];
     }
   }
 

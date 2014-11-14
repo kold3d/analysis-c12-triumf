@@ -4,4 +4,4 @@ run_list += "075,076,077,079,080,081,082,083,084,085,087,088,089,090,091,092,093
 run_list += "102,103,104,105,106,107"
 
 #file name on hdfs
-file_name = "hdfs://cycdhcp22.tamu.edu:9000//data/he8_triumf_0714/he8_triumf_{{{0}}}*_t.root".format(run_list)
+file_name = "hdfs://cycdhcp6.tamu.edu:9000//data/he8_triumf_0714/he8_triumf_{{{0}}}*_t.root".format(run_list)
