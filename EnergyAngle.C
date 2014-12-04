@@ -15,7 +15,7 @@ void EnergyAngle::Loop(Int_t index_number)
 {
   if (fChain == 0) return;
 
-  Float_t measured_energy,cm_energy[2],lab_angle[2],position[2],sum_dE[2];
+  Float_t measured_energy,measured_time,cm_energy[2],lab_angle[2],position[2],sum_dE[2];
   Int_t detector,quadrant,wire[2];
 
   TFile* file = new TFile(Form("energy_angle_%d.root",index_number),"recreate");
@@ -28,6 +28,7 @@ void EnergyAngle::Loop(Int_t index_number)
 
   TTree* outTree = new TTree("energyAngle","Events tagged with reconstructed energy and angle.");
   outTree->Branch("measured_energy",&measured_energy,"measured_energy/F");
+  outTree->Branch("measured_time",&measured_time,"measured_time/F");
   outTree->Branch("quadrant",&quadrant,"quadrant/I");
   outTree->Branch("detector",&detector,"detector/I");
   outTree->Branch("cm_energy",cm_energy,"cm_energy[2]/F");
@@ -66,10 +67,12 @@ void EnergyAngle::Loop(Int_t index_number)
       Int_t highSiEDet = -1;
       Int_t highSiEQuad = -1;
       Float_t highSiE = 0;
+      Float_t highSiT = 0;
       for(Int_t i =0;i<si_mul;i++) {
 	Float_t cal_e = Calibrations::CalibrateSi(si_ch_e[i],si_det[i]-1,si_quad[i]-1); 
 	if(cal_e>highSiE) {
 	  highSiE = cal_e;
+	  highSiT = si_ch_t[i];
 	  highSiEDet = si_det[i];
 	  highSiEQuad = si_quad[i];
 	}
@@ -81,6 +84,7 @@ void EnergyAngle::Loop(Int_t index_number)
       
       //Add proton information to tree
       measured_energy = highSiE;
+      measured_time = highSiT;
       quadrant = highSiEQuad;
       detector = highSiEDet;
 
