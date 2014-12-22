@@ -16,21 +16,22 @@ def fill_regions(events,scale_factor) :
                  (label[0]=='1' and (label[2]=='1' or label[2]=='3')) : s[1].Fill(value)
             elif (label[0]=='3' and (label[2]=='1' or label[2]=='3')) or \
                  (label[0]=='1' and (label[2]=='2' or label[2]=='4')) : s[2].Fill(value)
-    out_file = ROOT.TFile("cluster_out.root","recreate")
     c = ROOT.TCanvas()
     c.Divide(1,3)
     for i in range(1,4) :
         c.cd(i)
         ROOT.Spectra.DivideTargetThickness(s[i-1])
-        ROOT.Spectra.CalcSolidAngleFast(s[i-1],i)
+        ROOT.Spectra.CalcSolidAngleNorm(s[i-1],i)
         s[i-1].Scale(1./scale_factor)
         s[i-1].Draw()
+    out_file = ROOT.TFile("cluster_out.root","recreate")
     c.Write()
     out_file.Close()
 
 if __name__ == "__main__" :
     #scale factor for abs norm
-    scale_factor = 1.162066e9;
+    scale_factor = 1.162066e9
+    copyFiles    = False
     
     #setup cluster
     sconf = SparkConf().setAppName("he8_triumf_analysis")
@@ -63,7 +64,7 @@ if __name__ == "__main__" :
                                 "org.apache.hadoop.io.IntWritable","org.apache.hadoop.io.Text")
 
     #fill event dictionaries from root file, process raw events, cut on protons
-    proton_events_cm = lines.mapPartitionsWithIndex(f.process_energy_angle) \
+    proton_events_cm = lines.mapPartitionsWithIndex(lambda x,y : f.process_energy_angle(x,y,copyFiles)) \
                             .flatMap(lambda x : f.get_scattering_events(x)).collect()
 
     #fill root histogram

@@ -143,7 +143,7 @@ void EnergyAngle::Loop(Int_t index_number)
       else if(wireFront == 8) dE_E[7]->Fill(highSiE,highEPCFront);
 
       Float_t angleRear=0.,cmEnergyRear = 0.;
-      if(positionRear != 0. && fabs(positionRear)<=80.) {
+      if(goodRearPosition && fabs(positionRear)<=80.) {
 	std::pair<Float_t,Float_t> entry = LookupCMEnergyAngle(wireRear-1,positionRear,highSiE/1000.);
 	if(entry.first!=0.) {
 	  angleRear = entry.second;
@@ -151,7 +151,7 @@ void EnergyAngle::Loop(Int_t index_number)
 	}
       }
       Float_t angleFront=0.,cmEnergyFront = 0.;
-      if(positionFront != 0. && fabs(positionFront)<=80.) {
+      if(goodFrontPosition && fabs(positionFront)<=80.) {
 	std::pair<Float_t,Float_t> entry = LookupCMEnergyAngle(wireFront-1,positionFront,highSiE/1000.);
 	if(entry.first!=0.) {
 	  angleFront = entry.second;

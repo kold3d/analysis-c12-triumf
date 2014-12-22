@@ -2,6 +2,7 @@ import sys; sys.path.append('/opt/root/lib')
 import ROOT
 from ROOT import vector
 from pyspark import SparkFiles
+import subprocess
 
 class RootLoad :
     class __Libraries :
@@ -21,7 +22,7 @@ class RootLoad :
     def __getattr__(self,name) :
         return getattr(self.instance_Libraries,name)
 
-def process_energy_angle(index,iterat) :
+def process_energy_angle(index,iterat,copyFile) :
     RootLoad()
     #Extract run number
     filename = iterat.next()
@@ -34,6 +35,9 @@ def process_energy_angle(index,iterat) :
     reader = ROOT.EnergyAngle(root_tree)
     #loop tree, filling values in EnergyAngle
     reader.Loop(index)
+    if copyFile :
+      subprocess.call(["/usr/local/hadoop/bin/hdfs","dfs","-put","energy_angle_{0}.root".format(index),"/user/euberseder/he8-triumf-0714"])
+      subprocess.call(["/usr/local/hadoop/bin/hdfs","dfs","-chown","euberseder","/user/euberseder/he8-triumf-0714/energy_angle_{0}.root".format(index)])
     return [index]
 
 def get_scattering_events(index) :
