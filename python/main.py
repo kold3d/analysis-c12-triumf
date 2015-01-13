@@ -21,7 +21,8 @@ def fill_regions(events,scale_factor) :
     for i in range(1,4) :
         c.cd(i)
         ROOT.Spectra.DivideTargetThickness(s[i-1])
-        ROOT.Spectra.CalcSolidAngleNorm(s[i-1],i)
+        ##ROOT.Spectra.CalcSolidAngleFast(s[i-1],i)
+        s[i-1].Scale(1./4./3.14159)
         s[i-1].Scale(1./scale_factor)
         s[i-1].Draw()
     out_file = ROOT.TFile("cluster_out.root","recreate")

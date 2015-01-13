@@ -15,7 +15,7 @@ void EnergyAngle::Loop(Int_t index_number)
 {
   if (fChain == 0) return;
 
-  Float_t measured_energy,measured_time,cm_energy[2],lab_angle[2],position[2],sum_dE[2];
+  Float_t measured_energy,measured_time,cm_energy[2],lab_angle[2],position[2],sum_dE[2],left_dE[2],right_dE[2];
   Int_t detector,quadrant,wire[2];
 
   TFile* file = new TFile(Form("energy_angle_%d.root",index_number),"recreate");
@@ -34,6 +34,8 @@ void EnergyAngle::Loop(Int_t index_number)
   outTree->Branch("cm_energy",cm_energy,"cm_energy[2]/F");
   outTree->Branch("lab_angle",lab_angle,"lab_angle[2]/F");
   outTree->Branch("position",position,"position[2]/F");
+  outTree->Branch("left_dE",left_dE,"left_dE[2]/F");
+  outTree->Branch("right_dE",right_dE,"right_dE[2]/F");
   outTree->Branch("sum_dE",sum_dE,"sum_dE[2]/F");
   outTree->Branch("wire",wire,"wire[2]/I");
   outTree->Branch("rf_t",&rf_t,"rf_t/I");
@@ -95,6 +97,10 @@ void EnergyAngle::Loop(Int_t index_number)
       Bool_t goodFrontPosition = false;
       Float_t highEPCFront  = 0.;
       Float_t highEPCRear   = 0.;
+      Float_t highEPCRearLeft = 0.;
+      Float_t highEPCRearRight = 0.;
+      Float_t highEPCFrontLeft = 0.;
+      Float_t highEPCFrontRight = 0.;
       UChar_t wireFront     = 0;
       UChar_t wireRear      = 0;
       Bool_t wireAboveThreshold = false;
@@ -111,6 +117,8 @@ void EnergyAngle::Loop(Int_t index_number)
 	if(pc_wire[i] < 6) {
 	  if(sum > highEPCRear) {
 	    highEPCRear = sum;
+	    highEPCRearLeft = left;
+	    highEPCRearRight = right;
 	    positionRear = Calibrations::CalcPosition(pc_wire[i]-1,left,right);
 	    wireRear = pc_wire[i];
 	    goodRearPosition = true;
@@ -118,6 +126,8 @@ void EnergyAngle::Loop(Int_t index_number)
 	} else {
 	  if(sum > highEPCFront) {
 	    highEPCFront = sum;
+	    highEPCFrontLeft = left;
+	    highEPCFrontRight = right;
 	    positionFront = Calibrations::CalcPosition(pc_wire[i]-1,left,right);
 	    wireFront = pc_wire[i];
 	    goodFrontPosition = true;
@@ -171,6 +181,10 @@ void EnergyAngle::Loop(Int_t index_number)
       lab_angle[1] = angleFront;
       sum_dE[0] = highEPCRear;
       sum_dE[1] = highEPCFront;
+      left_dE[0] = highEPCRearLeft;
+      left_dE[1] = highEPCFrontLeft;
+      right_dE[0] = highEPCRearRight;
+      right_dE[1] = highEPCFrontRight;
       position[0] = positionRear;
       position[1] = positionFront;
 
