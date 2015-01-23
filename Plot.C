@@ -67,7 +67,14 @@ s3->SetLineColor(kGreen);
      s1->SetBinError(i,binError);
    }
    float angle = (hist) ? hist->GetMean() : 0.;
-   fprintf(file1,"%f %f %f %f\n",s1->GetBinCenter(i),s1->GetBinContent(i),s1->GetBinError(i),angle);
+   double lab_energy_fk = s1->GetBinCenter(i)*9./8.;
+   double angle2 = (180.-angle)*3.14159/180.;
+   double lab_angle_fk = (atan(sin(angle2)/(1./8.-cos(angle2)))+3.14159)*180./3.14159;
+   double lab_xs_fk = s1->GetBinContent(i)*pow(sin(angle*3.14159/180.),2.)/pow(sin(lab_angle_fk*3.14159/180.),2.)/
+     cos(3.14159/180.*(angle-lab_angle_fk))/1000.;
+   double lab_err_fk = s1->GetBinError(i)*pow(sin(angle*3.14159/180.),2.)/pow(sin(lab_angle_fk*3.14159/180.),2.)/
+     cos(3.14159/180.*(angle-lab_angle_fk))/1000.;
+   fprintf(file1,"%f %f %f %f\n",lab_energy_fk,lab_angle_fk,lab_xs_fk,lab_err_fk);
  }
  afile1->Close();
  fclose(file1);
@@ -83,7 +90,14 @@ s3->SetLineColor(kGreen);
      s2->SetBinError(i,binError);
    }
    float angle = (hist) ? hist->GetMean() : 0.;
-   fprintf(file2,"%f %f %f %f\n",s2->GetBinCenter(i),s2->GetBinContent(i),s2->GetBinError(i),angle);
+   double lab_energy_fk = s2->GetBinCenter(i)*9./8.;
+   double angle2 = (180.-angle)*3.14159/180.;
+   double lab_angle_fk = (atan(sin(angle2)/(1./8.-cos(angle2)))+3.14159)*180./3.14159;
+   double lab_xs_fk = s2->GetBinContent(i)*pow(sin(angle*3.14159/180.),2.)/pow(sin(lab_angle_fk*3.14159/180.),2.)/
+     cos(3.14159/180.*(angle-lab_angle_fk))/1000.;
+   double lab_err_fk = s2->GetBinError(i)*pow(sin(angle*3.14159/180.),2.)/pow(sin(lab_angle_fk*3.14159/180.),2.)/
+     cos(3.14159/180.*(angle-lab_angle_fk))/1000.;
+   fprintf(file2,"%f %f %f %f\n",lab_energy_fk,lab_angle_fk,lab_xs_fk,lab_err_fk);
  }
  afile2->Close();
  fclose(file2);
@@ -99,7 +113,14 @@ s3->SetLineColor(kGreen);
      s3->SetBinError(i,binError);
    }
    float angle = (hist) ? hist->GetMean() : 0.;
-   fprintf(file3,"%f %f %f %f\n",s3->GetBinCenter(i),s3->GetBinContent(i),s3->GetBinError(i),angle);
+   double lab_energy_fk = s3->GetBinCenter(i)*9./8.;
+   double angle2 = (180.-angle)*3.14159/180.;
+   double lab_angle_fk = (atan(sin(angle2)/(1./8.-cos(angle2)))+3.14159)*180./3.14159;
+   double lab_xs_fk = s3->GetBinContent(i)*pow(sin(angle*3.14159/180.),2.)/pow(sin(lab_angle_fk*3.14159/180.),2.)/
+     cos(3.14159/180.*(angle-lab_angle_fk))/1000.;
+   double lab_err_fk = s3->GetBinError(i)*pow(sin(angle*3.14159/180.),2.)/pow(sin(lab_angle_fk*3.14159/180.),2.)/
+     cos(3.14159/180.*(angle-lab_angle_fk))/1000.;
+   fprintf(file3,"%f %f %f %f\n",lab_energy_fk,lab_angle_fk,lab_xs_fk,lab_err_fk);
  }
  afile3->Close();
  fclose(file3);

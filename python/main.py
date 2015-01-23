@@ -31,7 +31,7 @@ def fill_regions(events,scale_factor) :
 
 if __name__ == "__main__" :
     #scale factor for abs norm
-    scale_factor = 1.162066e9
+    scale_factor = 1.133e9
     copyFiles    = False
     
     #setup cluster
