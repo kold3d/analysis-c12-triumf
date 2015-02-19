@@ -26,6 +26,12 @@ typedef struct LookupEntry {
   Float_t protonEnergy;
 } LookupEntry;
 
+typedef struct LookupResult {
+  Float_t energy;
+  Float_t angle;
+  Float_t range;
+} LookupResult;
+
 typedef std::map<int,std::map<float,std::vector<LookupEntry> > > LookupTable;
 
 class EnergyAngle {
@@ -81,7 +87,7 @@ public :
 
    static void CalcLookupTable();
    static void ReadLookupTable();
-   static std::pair<Float_t,Float_t> LookupCMEnergyAngle(UChar_t,Float_t,Float_t);
+   static LookupResult LookupCMEnergyAngle(UChar_t,Float_t,Float_t);
 
  private:
    static LookupTable table;

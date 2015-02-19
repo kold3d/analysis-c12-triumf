@@ -4,9 +4,9 @@
 #include <sstream>
 
 void Calibrations::InitParameters() {
-  m1               = 8.    ;   //AMU of projectile
+  m1               = 12.   ;   //AMU of projectile
   m2               = 1.    ;   //AMU of target
-  beam_energy      = 31.276;   //In MeV, after havar window
+  beam_energy      = 41.62 ;   //In MeV, after havar window
   sum_pc_threshold = 0.    ;   //In Channels
   si_threshold     = 350.  ;   //In KeV
 
@@ -14,14 +14,14 @@ void Calibrations::InitParameters() {
   anode_sep        = 12.5 ;   //Distance from one anode to the next
   window_to_si     = 513. ;   //Distance from entrance window to si detectors
 
-  pressure            = 990; //In torr
+  pressure            = 805; //In torr
   Float_t temperature = 295;  //In Kelvin, not used
 
   density_offset = 9.95784e-05;
   density_slope  = 7.20831e-07;
 
   density = density_offset+density_slope*pressure;  //From linear fit to energy dep
-  projectile = new EnergyLoss("dedx_8he_methane.dat",density*100.);
+  projectile = new EnergyLoss("dedx_carbon_methane.dat",density*100.);
   proton     = new EnergyLoss("dedx_proton_methane.dat",density*100.);
   proton_aluminum = new EnergyLoss("dedx_proton_aluminum.dat",2.3211E2);
   proton_silicon = new EnergyLoss("dedx_proton_silicon.dat",2.7019E2);
@@ -133,6 +133,15 @@ void Calibrations::InitParameters() {
       //printf("Run: %d Wire: %d Left: %f Right: %f\n",it1->first,it2->first+1,it2->second.first,it2->second.second);
     }
   }
+
+  wireHeight.push_back(-20.32); 
+  wireHeight.push_back(-10.16); 
+  wireHeight.push_back(  0.00); 
+  wireHeight.push_back( 10.16); 
+  wireHeight.push_back( 20.32); 
+  wireHeight.push_back(-15.24); 
+  wireHeight.push_back(  0.00); 
+  wireHeight.push_back( 15.25); 
 }
 
 Float_t Calibrations::CalibrateSi(Float_t ch,Int_t detector, Int_t quadrant) {
@@ -169,6 +178,21 @@ Float_t Calibrations::CalcPosition(UChar_t wire, Float_t left_ch, Float_t right_
   return pos;
 }
 
+Float_t Calibrations::CalcPathNormalization(UChar_t wire,Float_t wirePosition,Float_t depth) {
+  Float_t frontPlaneDepth = (wire>5) ? 464.18 : 479.42;
+  Float_t wireDepth = (wire>5) ? 471.8 : 484.5;
+  Float_t distanceToFront = frontPlaneDepth - depth;
+  Float_t distanceToWire = wireDepth-depth;
+  Float_t d = distanceToFront/distanceToWire;
+  Float_t pathLength = 2.*(1.-d)*sqrt(wirePosition*wirePosition+
+				      wireHeight[wire-1]*wireHeight[wire-1]+
+				      distanceToWire*distanceToWire);
+  Float_t cellLength = (wire>5) ? 15.24 : 10.16;
+  Float_t normalization = cellLength/pathLength;
+  //printf("%f %f %f %f %f %f %f\n",wirePosition,depth,distanceToFront,distanceToWire,pathLength,cellLength,normalization);
+  return normalization;
+}
+
 Float_t Calibrations::m1;
 Float_t Calibrations::m2;
 Float_t Calibrations::beam_energy;
@@ -192,4 +216,4 @@ std::map<int,std::pair<float,float> > Calibrations::wire_gain_diff_high;
 std::map<int,std::pair<float,float> > Calibrations::wire_pos_cal;
 std::map<int,std::map<int,std::pair<float,float> > > Calibrations::si_cal;
 std::map<int,std::map<int,std::pair<Float_t,Float_t> > > Calibrations::pc_run_gain;
-
+std::vector<float> Calibrations::wireHeight;

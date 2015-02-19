@@ -5,7 +5,7 @@ from runlist import file_name
 
 def fill_regions(events,scale_factor) :
     s = list()
-    for i in range(1,4) : s.append(ROOT.TH1F("s{0}".format(i),"s{0}".format(i),70,0,3.4))
+    for i in range(1,4) : s.append(ROOT.TH1F("s{0}".format(i),"s{0}".format(i),440,1.2,3.4))
     for event in events : 
         value = event.get("cm_energy")
         if value <= 0. : continue
@@ -21,8 +21,8 @@ def fill_regions(events,scale_factor) :
     for i in range(1,4) :
         c.cd(i)
         ROOT.Spectra.DivideTargetThickness(s[i-1])
-        ##ROOT.Spectra.CalcSolidAngleFast(s[i-1],i)
-        s[i-1].Scale(1./4./3.14159)
+        ROOT.Spectra.CalcSolidAngleNorm(s[i-1],i)
+        ##s[i-1].Scale(1./4./3.14159)
         s[i-1].Scale(1./scale_factor)
         s[i-1].Draw()
     out_file = ROOT.TFile("cluster_out.root","recreate")
@@ -31,8 +31,8 @@ def fill_regions(events,scale_factor) :
 
 if __name__ == "__main__" :
     #scale factor for abs norm
-    scale_factor = 1.133e9
-    copyFiles    = False
+    scale_factor = 1e10
+    copyFiles    = True 
     
     #setup cluster
     sconf = SparkConf().setAppName("he8_triumf_analysis")
@@ -54,8 +54,7 @@ if __name__ == "__main__" :
     sc.addFile("EnergyAngle_C.so")
     sc.addFile("Spectra_C.so")
     sc.addFile("cuts.root")
-    sc.addFile("dedx_8he_havar.dat")
-    sc.addFile("dedx_8he_methane.dat")
+    sc.addFile("dedx_carbon_methane.dat")
     sc.addFile("lookup_table.out")
     sc.addFile("position_cal.txt")
     sc.addFile("wires_scaled_table.out")

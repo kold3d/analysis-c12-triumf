@@ -14,6 +14,7 @@ class Calibrations {
   static Float_t  MatchPCRight(Float_t,Int_t,Int_t);
   static Float_t  CalibrateSi(Float_t,Int_t,Int_t);
   static Float_t  CalcPosition(UChar_t,Float_t,Float_t);
+  static Float_t  CalcPathNormalization(UChar_t,Float_t,Float_t);
 
   static Float_t m1;
   static Float_t m2;
@@ -39,6 +40,7 @@ class Calibrations {
   static std::map<int,std::pair<float,float> > wire_pos_cal;
   static std::map<int,std::map<int,std::pair<float,float> > > si_cal;
   static std::map<int,std::map<int,std::pair<Float_t,Float_t> > > pc_run_gain;
+  static std::vector<float> wireHeight;
 };
 
 #endif

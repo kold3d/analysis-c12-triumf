@@ -59,6 +59,7 @@ s3->SetLineColor(kGreen);
  TFile* afile1 = TFile::Open("angle_dists/region_1.root");
  for(int i = 1;i<=s1->GetNbinsX();i++) {
    TH1F* hist = afile1->Get(Form("bin_%d_cm_fk",i+1));
+   /*
    if(s1->GetBinContent(i)>0) {
      double eff = eff1->Eval(s1->GetBinCenter(i));
      double binContent = (eff < 1e-5) ? 0. : s1->GetBinContent(i)/eff;
@@ -66,10 +67,11 @@ s3->SetLineColor(kGreen);
      s1->SetBinContent(i,binContent);
      s1->SetBinError(i,binError);
    }
+   */
    float angle = (hist) ? hist->GetMean() : 0.;
-   double lab_energy_fk = s1->GetBinCenter(i)*9./8.;
+   double lab_energy_fk = s1->GetBinCenter(i)*13./12.;
    double angle2 = (180.-angle)*3.14159/180.;
-   double lab_angle_fk = (atan(sin(angle2)/(1./8.-cos(angle2)))+3.14159)*180./3.14159;
+   double lab_angle_fk = (atan(sin(angle2)/(1./12.-cos(angle2)))+3.14159)*180./3.14159;
    double lab_xs_fk = s1->GetBinContent(i)*pow(sin(angle*3.14159/180.),2.)/pow(sin(lab_angle_fk*3.14159/180.),2.)/
      cos(3.14159/180.*(angle-lab_angle_fk))/1000.;
    double lab_err_fk = s1->GetBinError(i)*pow(sin(angle*3.14159/180.),2.)/pow(sin(lab_angle_fk*3.14159/180.),2.)/
@@ -82,6 +84,7 @@ s3->SetLineColor(kGreen);
  TFile* afile2 = TFile::Open("angle_dists/region_2.root");
  for(int i = 1;i<=s2->GetNbinsX();i++) {
    TH1F* hist = afile2->Get(Form("bin_%d_cm_fk",i+1));
+   /*
    if(s2->GetBinContent(i)>0) {
      double eff = eff2->Eval(s2->GetBinCenter(i));
      double binContent = (eff < 1e-5) ? 0. : s2->GetBinContent(i)/eff;
@@ -89,10 +92,11 @@ s3->SetLineColor(kGreen);
      s2->SetBinContent(i,binContent);
      s2->SetBinError(i,binError);
    }
+   */
    float angle = (hist) ? hist->GetMean() : 0.;
-   double lab_energy_fk = s2->GetBinCenter(i)*9./8.;
+   double lab_energy_fk = s2->GetBinCenter(i)*13./12.;
    double angle2 = (180.-angle)*3.14159/180.;
-   double lab_angle_fk = (atan(sin(angle2)/(1./8.-cos(angle2)))+3.14159)*180./3.14159;
+   double lab_angle_fk = (atan(sin(angle2)/(1./12.-cos(angle2)))+3.14159)*180./3.14159;
    double lab_xs_fk = s2->GetBinContent(i)*pow(sin(angle*3.14159/180.),2.)/pow(sin(lab_angle_fk*3.14159/180.),2.)/
      cos(3.14159/180.*(angle-lab_angle_fk))/1000.;
    double lab_err_fk = s2->GetBinError(i)*pow(sin(angle*3.14159/180.),2.)/pow(sin(lab_angle_fk*3.14159/180.),2.)/
@@ -105,6 +109,7 @@ s3->SetLineColor(kGreen);
  TFile* afile3 = TFile::Open("angle_dists/region_3.root");
  for(int i = 1;i<=s3->GetNbinsX();i++) {
    TH1F* hist = afile3->Get(Form("bin_%d_cm_fk",i+1));
+   /*
    if(s3->GetBinContent(i)>0) {
      double eff = eff3->Eval(s3->GetBinCenter(i));
      double binContent = (eff < 1e-5) ? 0. : s3->GetBinContent(i)/eff;
@@ -112,10 +117,11 @@ s3->SetLineColor(kGreen);
      s3->SetBinContent(i,binContent);
      s3->SetBinError(i,binError);
    }
+   */
    float angle = (hist) ? hist->GetMean() : 0.;
-   double lab_energy_fk = s3->GetBinCenter(i)*9./8.;
+   double lab_energy_fk = s3->GetBinCenter(i)*13./12.;
    double angle2 = (180.-angle)*3.14159/180.;
-   double lab_angle_fk = (atan(sin(angle2)/(1./8.-cos(angle2)))+3.14159)*180./3.14159;
+   double lab_angle_fk = (atan(sin(angle2)/(1./12.-cos(angle2)))+3.14159)*180./3.14159;
    double lab_xs_fk = s3->GetBinContent(i)*pow(sin(angle*3.14159/180.),2.)/pow(sin(lab_angle_fk*3.14159/180.),2.)/
      cos(3.14159/180.*(angle-lab_angle_fk))/1000.;
    double lab_err_fk = s3->GetBinError(i)*pow(sin(angle*3.14159/180.),2.)/pow(sin(lab_angle_fk*3.14159/180.),2.)/
@@ -129,5 +135,5 @@ s3->SetLineColor(kGreen);
  s1->Draw();
  s2->Draw("same");
  s3->Draw("same");
- c2->Print("He8pp_final.pdf","pdf");
+ c2->Print("c12pp_final.pdf","pdf");
 }

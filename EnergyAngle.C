@@ -70,8 +70,10 @@ void EnergyAngle::Loop(Int_t index_number)
       Int_t highSiEQuad = -1;
       Float_t highSiE = 0;
       Float_t highSiT = 0;
+      Int_t mult = 0;
       for(Int_t i =0;i<si_mul;i++) {
 	Float_t cal_e = Calibrations::CalibrateSi(si_ch_e[i],si_det[i]-1,si_quad[i]-1); 
+	if(cal_e>Calibrations::si_threshold) mult++;
 	if(cal_e>highSiE) {
 	  highSiE = cal_e;
 	  highSiT = si_ch_t[i];
@@ -79,6 +81,8 @@ void EnergyAngle::Loop(Int_t index_number)
 	  highSiEQuad = si_quad[i];
 	}
       }
+
+      //if(mult>1) continue;
 
       //If Si energy is less than threshold, next event
       if(highSiE < Calibrations::si_threshold) continue;
@@ -153,19 +157,23 @@ void EnergyAngle::Loop(Int_t index_number)
       else if(wireFront == 8) dE_E[7]->Fill(highSiE,highEPCFront);
 
       Float_t angleRear=0.,cmEnergyRear = 0.;
-      if(goodRearPosition && fabs(positionRear)<=80.) {
-	std::pair<Float_t,Float_t> entry = LookupCMEnergyAngle(wireRear-1,positionRear,highSiE/1000.);
-	if(entry.first!=0.) {
-	  angleRear = entry.second;
-	  cmEnergyRear = entry.first;
+      if(goodRearPosition && fabs(positionRear)<=90.) {
+	LookupResult entry = LookupCMEnergyAngle(wireRear-1,positionRear,highSiE/1000.);
+	if(entry.energy!=0.) {
+	  angleRear = entry.angle;
+	  cmEnergyRear = entry.energy;
+	  Float_t norm = Calibrations::CalcPathNormalization(wireRear,positionRear,entry.range);
+	  highEPCRear *= norm;
 	}
       }
       Float_t angleFront=0.,cmEnergyFront = 0.;
-      if(goodFrontPosition && fabs(positionFront)<=80.) {
-	std::pair<Float_t,Float_t> entry = LookupCMEnergyAngle(wireFront-1,positionFront,highSiE/1000.);
-	if(entry.first!=0.) {
-	  angleFront = entry.second;
-	  cmEnergyFront = entry.first;
+      if(goodFrontPosition && fabs(positionFront)<=90.) {
+	LookupResult entry = LookupCMEnergyAngle(wireFront-1,positionFront,highSiE/1000.);
+	if(entry.energy!=0.) {
+	  angleFront = entry.angle;
+	  cmEnergyFront = entry.energy;
+	  Float_t norm = Calibrations::CalcPathNormalization(wireFront,positionFront,entry.range);
+	  highEPCFront *= norm;
 	}
       }
       if(cmEnergyFront == 0. && cmEnergyRear == 0.) {
@@ -199,13 +207,18 @@ void EnergyAngle::Loop(Int_t index_number)
    printf("Total Events: %d Below PC Threshold: %d No Position: %d No CM Energy %d\n",goodSi,numBelowPCThreshold,noPosition,noCMEnergy);   
 }
 
-std::pair<Float_t,Float_t> EnergyAngle::LookupCMEnergyAngle(UChar_t wire, Float_t x, Float_t protonEnergy) {
+LookupResult EnergyAngle::LookupCMEnergyAngle(UChar_t wire, Float_t x, Float_t protonEnergy) {
+  LookupResult result;
+
   Float_t newX = floor(10.*fabs(x)/5.)*5./10.;
   if(x-newX>=0.25) newX += 0.5;
 
-  if(wire > 7 || wire < 0 || newX < 0. || newX > 80. ) {
+  if(wire > 7 || wire < 0 || newX < 0. || newX > 90. ) {
     //printf("wire=%d x=%f out of Range.\n",wire,newX);
-    return std::pair<Float_t,Float_t>(0.,0.);
+    result.energy = 0.;
+    result.angle = 0.;
+    result.range = 0.;
+    return result;
   }
 
   Int_t mappedWire = wire;
@@ -220,21 +233,30 @@ std::pair<Float_t,Float_t> EnergyAngle::LookupCMEnergyAngle(UChar_t wire, Float_
   Int_t direction = 0;
   if(vec[start].protonEnergy > protonEnergy) direction = 1;
   else if(vec[start].protonEnergy < protonEnergy) direction  = -1;
-  else return std::pair<Float_t,Float_t>(vec[start].cmEnergy,vec[start].angle);
+  else {
+    result.energy = vec[start].cmEnergy;
+    result.angle = vec[start].angle;
+    result.range = vec[start].range;
+    return result;
+
+  }
 
   Bool_t done = false;
   Float_t previousAngle = vec[start].angle;
   Float_t previousCMEnergy = vec[start].cmEnergy;
   Float_t previousProtonEnergy = vec[start].protonEnergy;
+  Float_t previousRange = vec[start].range;
 
   Float_t foundAngle =0;
   Float_t foundCMEnergy = 0.;
+  Float_t foundRange = 0.;
 
   Int_t i = start+direction;
   while(!done && i>0 && i<size) {
     Float_t thisAngle = vec[i].angle;
     Float_t thisCMEnergy = vec[i].cmEnergy;
     Float_t thisProtonEnergy = vec[i].protonEnergy;
+    Float_t thisRange = vec[i].range;
 
     if((direction < 0 && thisProtonEnergy >=protonEnergy) ||
 	      (direction >0 && thisProtonEnergy <= protonEnergy)) {
@@ -242,13 +264,17 @@ std::pair<Float_t,Float_t> EnergyAngle::LookupCMEnergyAngle(UChar_t wire, Float_
       Float_t energy_intercept = thisCMEnergy-thisProtonEnergy*energy_slope;
       Float_t angle_slope = (thisAngle-previousAngle)/(thisProtonEnergy-previousProtonEnergy);
       Float_t angle_intercept = thisAngle-thisProtonEnergy*angle_slope;
+      Float_t range_slope = (thisRange-previousRange)/(thisProtonEnergy-previousProtonEnergy);
+      Float_t range_intercept = thisRange-thisProtonEnergy*range_slope;
       foundAngle = angle_slope*protonEnergy+angle_intercept;
       foundCMEnergy = energy_slope*protonEnergy+energy_intercept;
+      foundRange = range_slope*protonEnergy+range_intercept;
       done = true;
     } else {
       previousAngle = thisAngle;
       previousCMEnergy = thisCMEnergy;  
       previousProtonEnergy = thisProtonEnergy;
+      previousRange = thisRange;
       i += direction;
     }
   }
@@ -257,7 +283,10 @@ std::pair<Float_t,Float_t> EnergyAngle::LookupCMEnergyAngle(UChar_t wire, Float_
     //printf("Entry wire=%d x=%f energy=%f not found in table!\n",wire,newX,protonEnergy);
   }
   
-  return std::pair<Float_t,Float_t>(foundCMEnergy,foundAngle);
+  result.energy = foundCMEnergy;
+  result.angle = foundAngle;
+  result.range = foundRange;
+  return result;
 }
 
 void EnergyAngle::ReadLookupTable() {
@@ -309,7 +338,7 @@ void EnergyAngle::CalcLookupTable() {
       continue;
     }
     
-    for(Float_t x=0.;x<=80.;x+=0.5) {
+    for(Float_t x=0.;x<=90.;x+=0.5) {
       for(Float_t E = Calibrations::beam_energy;E>0.;E-=deltaBeamE) {
 	Float_t range = Calibrations::projectile->CalcRange(Calibrations::beam_energy,E);
 	Float_t pointToWire = (wire<5) ? distanceToSecondWire-range :

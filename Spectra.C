@@ -20,14 +20,12 @@ std::vector<GoodEvent> Spectra::Loop()
   TFile* cutFile = TFile::Open("cuts.root");
   TCutG* cuts[8];
   TCutG* rf_cut = (TCutG*) cutFile->Get("RF");
+  TCutG* ic_cut = (TCutG*) cutFile->Get("IC_CUT");
   for(int i = 0;i<8;i++) {
     cuts[i] = (TCutG*)cutFile->Get(Form("PROTONS_%d",i+1));
     
   }
   cutFile->Close();
-  
-  Int_t numBins = 60;
-  
   
   Long64_t nentries = fChain->GetEntriesFast();
   
@@ -47,8 +45,9 @@ std::vector<GoodEvent> Spectra::Loop()
     if(!cuts[wire[which]-1]->IsInside(measured_energy,sum_dE[which])) {
       continue;
     }
-    if(!rf_cut->IsInside(measured_energy,rf_t)) continue;
-    if(ic_ch_e<120||ic_ch_e>300) continue;
+    //if(!rf_cut->IsInside(measured_energy,rf_t)) continue;
+    //if(!ic_cut->IsInside(ic_ch_e,cm_energy[which])) continue;
+    //if(ic_ch_e<120||ic_ch_e>300) continue;
     GoodEvent thisEvent = {wire[which],quadrant,detector,position[which],cm_energy[which]};
     good_events.push_back(thisEvent);
   }

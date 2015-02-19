@@ -7,4 +7,4 @@ from runlist import *
 chain = TChain("rawData")
 list = run_list.split(',')
 for run in list :
-  chain.Add("/hdfs/data/he8_triumf_0714/tree/he8_triumf_{0}*_t.root".format(run))
+  chain.Add("/hdfs/data/he8_triumf_0714/tree/carbon_triumf_{0}*_t.root".format(run))
